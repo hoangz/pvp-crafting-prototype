@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Craft Clash ⚔️ PvP Crafting Race</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ── Top bar: controls only ── -->
+  <header class="top-bar">
+    <div class="controls-section">
+      <select id="diff-select" title="PvP difficulty">
+        <option value="easy">Easy</option>
+        <option value="medium" selected>Medium</option>
+        <option value="hard">Hard</option>
+        <option value="random">Random</option>
+      </select>
+      <button id="start-pvp-btn" class="btn-primary">⚔️ PvP</button>
+      <button id="start-pve-btn" class="btn-secondary">🏰 PvE</button>
+    </div>
+  </header>
+
+  <!-- ── Target banner: target + timer together ── -->
+  <div class="target-banner">
+    <div class="target-main">
+      <span class="target-banner-label">🎯 TARGET</span>
+      <div id="target-card" class="target-card">
+        <span class="target-placeholder">? ? ?</span>
+      </div>
+    </div>
+    <div class="timer-block">
+      <div id="stage-label" class="stage-label"></div>
+      <span id="timer" class="timer">0:00</span>
+    </div>
+  </div>
+
+  <!-- ── Main game area ── -->
+  <main class="game-area">
+
+    <!-- Player side (always visible) -->
+    <section class="side player-side">
+      <div class="side-header">
+        <h2 class="side-title">⚔️ You</h2>
+        <div class="combine-zone">
+          <div id="slot-a" class="combine-slot">Select item</div>
+          <span class="plus-sign">+</span>
+          <div id="slot-b" class="combine-slot">Select item</div>
+          <button id="combine-btn" class="btn-combine" disabled title="Combine">⚗️</button>
+        </div>
+      </div>
+      <div id="player-feedback" class="feedback"></div>
+      <div id="player-grid" class="item-grid"></div>
+    </section>
+
+    <div class="side-divider"></div>
+
+    <!-- Bot side (hidden in PvE via body.pve-mode) -->
+    <section class="side bot-side" id="bot-section">
+      <div class="side-header">
+        <h2 class="side-title">🤖 Bot</h2>
+      </div>
+      <div id="bot-feedback" class="feedback"></div>
+      <div id="bot-grid" class="item-grid"></div>
+    </section>
+
+  </main>
+
+  <!-- ── Result overlay ── -->
+  <div id="win-overlay" class="overlay hidden">
+    <div class="overlay-content">
+      <div class="overlay-title"></div>
+      <div class="overlay-item-display"></div>
+      <div class="overlay-stats"></div>
+      <div class="overlay-message"></div>
+      <div class="overlay-solution"></div>
+      <button id="play-again-btn" class="overlay-btn btn-primary">PLAY AGAIN</button>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="game-engine.js"></script>
+  <script src="bot-ai.js"></script>
+  <script src="ui-renderer.js"></script>
+  <script src="game-controller.js"></script>
+</body>
+</html>
