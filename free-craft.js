@@ -4,7 +4,7 @@
 const FreeCraft = {
   _ENDPOINT: 'https://chat.zingplay.com/api/v1/chat/completions',
   _KEY:      'sk-6508afc771c0423592cda880e50d6d7d',
-  _MODEL:    'gpt-4o-mini',
+  _MODEL:    'local-model',
 
   // Cache: "ItemA|ItemB" → { name, emoji }
   get cache() { return JSON.parse(localStorage.getItem('fc_cache') || '{}'); },
