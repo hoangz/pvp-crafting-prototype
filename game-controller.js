@@ -254,43 +254,59 @@ function timeoutPvE() {
 }
 
 // ── Free Craft Mode ───────────────────────────────────────────────────────────
-function startFreeCraft() {
+async function startFreeCraft() {
   bot.stop();
   clearInterval(pvp.timer);
   clearInterval(pve.timer);
-  enterFreeCraftMode();
-}
+  clearInterval(fc.timer);
 
-function enterFreeCraftMode() {
-  // Random target — changes every run
-  const target = TARGETS[Math.floor(Math.random() * TARGETS.length)].name;
-
-  state.mode      = 'free';
-  state.active    = true;
-  state.target    = target;
-  state.inventory = [...BASE_ITEMS];
-  state.selected  = [];
-  fc.timeLeft     = 120;
-
+  // Show loading state while AI generates recipes
+  state.mode   = 'free';
+  state.active = false;
   document.body.classList.remove('pve-mode');
   document.body.classList.add('free-mode');
-  stageLabel.textContent = '🤖 API Mode — AI generates all recipes';
-  updateTargetDisplay(targetCard, target);
   hideOverlay(winOverlay);
+  stageLabel.textContent = '🤖 Generating recipes…';
+  targetCard.innerHTML = '<span class="target-placeholder" style="font-size:14px">⏳ AI building recipe tree…</span>';
+  timerEl.textContent = '';
+  state.inventory = [...BASE_ITEMS];
+  state.selected  = [];
   updateSlots();
   renderPlayer();
 
-  clearInterval(fc.timer);
-  updateTimerDisplay(timerEl, fc.timeLeft, true);
-  fc.timer = setInterval(() => {
-    fc.timeLeft--;
+  try {
+    // Generate full recipe tree via AI
+    const tree = await FreeCraft.generateTree();
+    FreeCraft.liveCache = {};
+
+    // Pick a random target from the generated T3 items
+    const target = tree.targets[Math.floor(Math.random() * tree.targets.length)];
+    if (!target) throw new Error('No targets generated');
+
+    state.target = target;
+    state.active = true;
+    fc.timeLeft  = 120;
+
+    stageLabel.textContent = '🤖 API Mode — AI-generated recipes';
+    updateTargetDisplay(targetCard, target);
+    renderPlayer();
+
+    // Start countdown
     updateTimerDisplay(timerEl, fc.timeLeft, true);
-    if (fc.timeLeft <= 0) {
-      clearInterval(fc.timer);
-      state.active = false;
-      showOverlay(winOverlay, 'timeout', { target: state.target });
-    }
-  }, 1000);
+    fc.timer = setInterval(() => {
+      fc.timeLeft--;
+      updateTimerDisplay(timerEl, fc.timeLeft, true);
+      if (fc.timeLeft <= 0) {
+        clearInterval(fc.timer);
+        state.active = false;
+        showOverlay(winOverlay, 'timeout', { target: state.target });
+      }
+    }, 1000);
+  } catch (err) {
+    stageLabel.textContent = '❌ Failed to generate recipes';
+    targetCard.innerHTML = `<span class="target-placeholder" style="font-size:12px;color:var(--red)">${err.message}</span>`;
+    showFeedback(playerFB, `❌ ${err.message}`, 'error');
+  }
 }
 
 
