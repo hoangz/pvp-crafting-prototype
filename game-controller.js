@@ -134,7 +134,9 @@ function startPvP() {
 
   const diff  = $('diff-select').value;
   const pool  = diff === 'random' ? TARGETS : TARGETS.filter(t => t.difficulty === diff);
-  const match = pool[Math.floor(Math.random() * pool.length)];
+  if (!pool.length) return;
+  const match    = pool[Math.floor(Math.random() * pool.length)];
+  const botDiff  = diff === 'random' ? match.difficulty : diff;
   state.target = match.name;
   state.mode   = 'pvp';
   state.active = true;
@@ -160,7 +162,7 @@ function startPvP() {
     showFeedback(botFB, `${ITEMS[combo.result].emoji} ${combo.result}`, 'info');
   };
   bot.onWin = () => endPvP('bot');
-  bot.start(state.target, diff === 'random' ? 'medium' : diff, match.base);
+  bot.start(state.target, botDiff, match.base);
   renderBot();
 }
 
