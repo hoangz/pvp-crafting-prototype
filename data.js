@@ -137,10 +137,11 @@ const SOLUTIONS = {
 
 // PvE mode: 5 stages with increasing difficulty + time limits (seconds)
 // Inventory resets to BASE_ITEMS at each stage start
+// baseScore: points for completing the stage; time bonus = floor(timeLeft/timeLimit * baseScore)
 const PVE_STAGES = [
-  { stage: 1, target: 'Warrior',       timeLimit: 60,  label: 'Stage 1 — Warrior' },
-  { stage: 2, target: 'Dragon',        timeLimit: 75,  label: 'Stage 2 — Dragon' },
-  { stage: 3, target: 'Paladin',       timeLimit: 60,  label: 'Stage 3 — Paladin' },
-  { stage: 4, target: 'Necromancer',   timeLimit: 60,  label: 'Stage 4 — Necromancer' },
-  { stage: 5, target: 'Dragon Knight', timeLimit: 90,  label: 'Stage 5 — Dragon Knight' },
+  { stage: 1, target: 'Warrior',       timeLimit: 60,  label: 'Stage 1 — Warrior',       baseScore: 100 },
+  { stage: 2, target: 'Dragon',        timeLimit: 75,  label: 'Stage 2 — Dragon',         baseScore: 200 },
+  { stage: 3, target: 'Paladin',       timeLimit: 60,  label: 'Stage 3 — Paladin',        baseScore: 300 },
+  { stage: 4, target: 'Necromancer',   timeLimit: 60,  label: 'Stage 4 — Necromancer',    baseScore: 400 },
+  { stage: 5, target: 'Dragon Knight', timeLimit: 90,  label: 'Stage 5 — Dragon Knight',  baseScore: 500 },
 ];

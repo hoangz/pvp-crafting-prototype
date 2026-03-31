@@ -14,7 +14,7 @@ const state = {
 };
 
 const pvp = { seconds: 0, timer: null };
-const pve = { stageIndex: 0, timeLeft: 0, timer: null };
+const pve = { stageIndex: 0, timeLeft: 0, timer: null, totalScore: 0 };
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
@@ -147,6 +147,7 @@ function startPvE() {
 
   state.mode = 'pve';
   pve.stageIndex = 0;
+  pve.totalScore = 0;
   // Shuffle stage order so each run feels different
   pve.stages = [...PVE_STAGES].sort(() => Math.random() - 0.5);
   document.body.classList.add('pve-mode');
@@ -182,21 +183,32 @@ function beginPvEStage() {
 function clearPvEStage() {
   state.active = false;
   clearInterval(pve.timer);
-  const isLast = pve.stageIndex >= pve.stages.length - 1;
+  const stage   = pve.stages[pve.stageIndex];
+  const isLast  = pve.stageIndex >= pve.stages.length - 1;
+
+  // Score = base + time bonus (proportional to time remaining)
+  const timeBonus   = Math.floor((pve.timeLeft / stage.timeLimit) * stage.baseScore);
+  const stageScore  = stage.baseScore + timeBonus;
+  pve.totalScore   += stageScore;
 
   if (isLast) {
-    showOverlay(winOverlay, 'pve-complete', { totalStages: PVE_STAGES.length });
+    showOverlay(winOverlay, 'pve-complete', {
+      totalStages: PVE_STAGES.length,
+      totalScore:  pve.totalScore,
+    });
   } else {
     showOverlay(winOverlay, 'stage-clear', {
-      stage: PVE_STAGES[pve.stageIndex].stage,
-      target: state.target,
-      timeLeft: pve.timeLeft,
+      stage:      stage.stage,
+      target:     state.target,
+      timeLeft:   pve.timeLeft,
+      stageScore,
+      totalScore: pve.totalScore,
     });
     setTimeout(() => {
       hideOverlay(winOverlay);
       pve.stageIndex++;
       beginPvEStage();
-    }, 2000);
+    }, 2500);
   }
 }
 

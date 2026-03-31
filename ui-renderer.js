@@ -85,12 +85,15 @@ function showOverlay(overlay, result, data = {}) {
   const itemData = ITEMS[data.target] || {};
   const emoji    = itemData.emoji || '✨';
 
+  const scoreTag = data.stageScore != null
+    ? ` · +${data.stageScore}pts (total: ${data.totalScore})`
+    : '';
   const configs = {
-    'win':          { cls: 'win',   title: '🏆 YOU WIN!',              stats: `⏱ ${data.time}`,                     msg: `You crafted ${data.target} first!` },
-    'lose':         { cls: 'lose',  title: '🤖 BOT WINS',              stats: `⏱ ${data.time}`,                     msg: `Bot crafted ${data.target} first. Try again!` },
-    'stage-clear':  { cls: 'stage', title: `✅ Stage ${data.stage} Clear!`, stats: `⏱ ${data.timeLeft}s remaining`, msg: `Next stage in 2s…` },
-    'pve-complete': { cls: 'win',   title: '🎉 ALL CLEAR!',            stats: `${data.totalStages} stages complete`, msg: `You conquered all stages!` },
-    'timeout':      { cls: 'lose',  title: '⏰ TIME\'S UP!',           stats: `Target: ${data.target}`,              msg: `Couldn't craft it in time. Try again!` },
+    'win':          { cls: 'win',   title: '🏆 YOU WIN!',              stats: `⏱ ${data.time}`,                                       msg: `You crafted ${data.target} first!` },
+    'lose':         { cls: 'lose',  title: '🤖 BOT WINS',              stats: `⏱ ${data.time}`,                                       msg: `Bot crafted ${data.target} first. Try again!` },
+    'stage-clear':  { cls: 'stage', title: `✅ Stage ${data.stage} Clear!`, stats: `⏱ ${data.timeLeft}s left${scoreTag}`,             msg: `Next stage in 2.5s…` },
+    'pve-complete': { cls: 'win',   title: '🎉 ALL CLEAR!',            stats: `${data.totalStages} stages · 🏅 ${data.totalScore} pts`, msg: `You conquered all stages!` },
+    'timeout':      { cls: 'lose',  title: '⏰ TIME\'S UP!',           stats: `Target: ${data.target}`,                               msg: `Couldn't craft it in time. Try again!` },
   };
 
   const cfg = configs[result] || configs['win'];
