@@ -71,6 +71,14 @@ async function executeCombine() {
         state.inventory.push(name);
         const tag = isNew ? '✨ NEW! ' : '✅ ';
         showFeedback(playerFB, `${tag}${ITEMS[a].emoji} ${a} + ${ITEMS[b].emoji} ${b} → ${emoji} ${name}`, isNew ? 'success' : 'info');
+        // Check win: item name matches target (case-insensitive)
+        if (name.toLowerCase() === state.target.toLowerCase()) {
+          clearSelection();
+          combineBtn.disabled = false;
+          state.active = false;
+          showOverlay(winOverlay, 'win', { target: state.target, time: '∞' });
+          return;
+        }
       } else {
         showFeedback(playerFB, `⚠️ Already have ${emoji} ${name}`, 'warn');
       }
@@ -252,17 +260,20 @@ function startFreeCraft() {
 }
 
 function enterFreeCraftMode() {
-  state.mode   = 'free';
-  state.active = true;
-  state.target = null;
+  // Pick a random target — same pool as PvP/PvE
+  const target = TARGETS[Math.floor(Math.random() * TARGETS.length)].name;
+
+  state.mode      = 'free';
+  state.active    = true;
+  state.target    = target;
   state.inventory = [...BASE_ITEMS];
   state.selected  = [];
 
   document.body.classList.remove('pve-mode');
   document.body.classList.add('free-mode');
-  stageLabel.textContent = '🌍 Free Craft';
-  targetCard.innerHTML = '<span class="target-placeholder" style="font-size:28px;letter-spacing:4px">∞</span>';
+  stageLabel.textContent = '🌍 Free Craft — no time limit';
   timerEl.textContent = '';
+  updateTargetDisplay(targetCard, target);
   hideOverlay(winOverlay);
   updateSlots();
   renderPlayer();
