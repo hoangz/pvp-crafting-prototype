@@ -267,7 +267,7 @@ async function startFreeCraft() {
   document.body.classList.add('free-mode');
   hideOverlay(winOverlay);
   stageLabel.textContent = '🤖 Generating recipes…';
-  targetCard.innerHTML = '<span class="target-placeholder" style="font-size:14px">⏳ AI building recipe tree…</span>';
+  targetCard.innerHTML = '<span class="target-placeholder" style="font-size:14px">⏳ AI building 12 recipes…</span>';
   timerEl.textContent = '';
   state.inventory = [...BASE_ITEMS];
   state.selected  = [];

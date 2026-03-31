@@ -25,56 +25,51 @@ const FreeCraft = {
     return JSON.parse(match[0]);
   },
 
-  // ── Generate full recipe tree in ONE API call ──
+  // ── Generate full recipe tree via parallel small API calls per tier ──
   async generateTree() {
     this.tree = { items: {}, recipes: [], targets: [] };
+    this.liveCache = {};
 
-    const resp = await fetch(this._ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'Authorization': `Bearer ${this._KEY}`,
-      },
-      body: JSON.stringify({
-        model: this._MODEL,
-        max_tokens: 4096,
-        messages: [{
-          role: 'user',
-          content: `Crafting game recipe tree. Base: Human👤, Fire🔥, Magic⚡, Beast🐾.
-Generate: 6 T1 (base+base), 4 T2 (base+T1 or T1+T1), 2 T3 (T1+T2 or T2+T2). T3=targets.
-Creative theme, different each time. Ingredients must exist in prior tiers.
-Reply JSON: {"recipes":[{"a":"Human","b":"Fire","result":"Warrior","emoji":"⚔️","tier":1}],"targets":["T3name1","T3name2"]}`,
-        }],
-      }),
-    });
+    // T1: 6 base+base combos (all in parallel)
+    const t1Pairs = [
+      ['Human','Fire'], ['Human','Magic'], ['Human','Beast'],
+      ['Fire','Magic'], ['Fire','Beast'], ['Magic','Beast'],
+    ];
+    const t1 = await Promise.all(t1Pairs.map(([a,b]) => this._callSingleCombo(a, b)));
+    t1Pairs.forEach(([a,b], i) => this._registerOne(a, b, t1[i], 1));
+    const t1Names = t1.map(r => r.name);
 
-    const data = await resp.json();
-    if (data.error) throw new Error(data.error.message || 'API error');
+    // T2: pick 4 random base+T1 combos (parallel)
+    const t2Candidates = [];
+    for (const base of BASE_ITEMS)
+      for (const t1n of t1Names) t2Candidates.push([base, t1n]);
+    const t2Pairs = t2Candidates.sort(() => Math.random() - 0.5).slice(0, 4);
+    const t2 = await Promise.all(t2Pairs.map(([a,b]) => this._callSingleCombo(a, b)));
+    t2Pairs.forEach(([a,b], i) => this._registerOne(a, b, t2[i], 2));
+    const t2Names = t2.map(r => r.name);
 
-    const text = data.choices?.[0]?.message?.content || '';
-    const tree = this._parseJSON(text);
+    // T3: pick 2 random T1+T2 combos (parallel) — these become targets
+    const t3Candidates = [];
+    for (const t1n of t1Names)
+      for (const t2n of t2Names) t3Candidates.push([t1n, t2n]);
+    const t3Pairs = t3Candidates.sort(() => Math.random() - 0.5).slice(0, 2);
+    const t3 = await Promise.all(t3Pairs.map(([a,b]) => this._callSingleCombo(a, b)));
+    t3Pairs.forEach(([a,b], i) => this._registerOne(a, b, t3[i], 3));
+    this.tree.targets = t3.map(r => r.name);
 
-    // Validate & register
-    const validNames = new Set(BASE_ITEMS);
-    for (const r of tree.recipes) validNames.add(r.result);
-
-    for (const r of tree.recipes) {
-      r.a = this._fuzzyMatch(r.a, validNames) || r.a;
-      r.b = this._fuzzyMatch(r.b, validNames) || r.b;
-      if ([...r.emoji].length > 2) r.emoji = [...r.emoji][0];
-      if (!validNames.has(r.a) || !validNames.has(r.b)) continue;
-
-      if (!ITEMS[r.result]) ITEMS[r.result] = { tier: r.tier || 1, emoji: r.emoji };
-      this.tree.items[r.result] = { tier: r.tier || 1, emoji: r.emoji };
-      this.tree.recipes.push(r);
-
-      const key = r.a <= r.b ? `${r.a}|${r.b}` : `${r.b}|${r.a}`;
-      engine.recipeMap.set(key, r.result);
-    }
-
-    this.tree.targets = (tree.targets || []).filter(t => validNames.has(t));
-    if (this.tree.targets.length === 0) throw new Error('No valid targets generated');
+    if (this.tree.targets.length === 0) throw new Error('No targets generated');
     return this.tree;
+  },
+
+  // Register a single recipe into engine + tree
+  _registerOne(a, b, result, tier) {
+    const name  = result.name;
+    const emoji = [...(result.emoji || '✨')].length > 2 ? [...result.emoji][0] : (result.emoji || '✨');
+    if (!ITEMS[name]) ITEMS[name] = { tier, emoji };
+    this.tree.items[name] = { tier, emoji };
+    this.tree.recipes.push({ a, b, result: name, emoji, tier });
+    const key = a <= b ? `${a}|${b}` : `${b}|${a}`;
+    engine.recipeMap.set(key, name);
   },
 
   // Fuzzy match: fix AI typos like "Treent" → "Treant"
