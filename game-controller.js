@@ -15,6 +15,7 @@ const state = {
 
 const pvp = { seconds: 0, timer: null };
 const pve = { stageIndex: 0, timeLeft: 0, timer: null, totalScore: 0, awaitingNext: false };
+const fc  = { timeLeft: 0, timer: null, discovered: 0 };
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
@@ -69,16 +70,11 @@ async function executeCombine() {
       if (!ITEMS[name]) ITEMS[name] = { tier: 1, emoji };
       if (!state.inventory.includes(name)) {
         state.inventory.push(name);
+        if (isNew) fc.discovered++;
+        // Update discovery counter in target card
+        targetCard.innerHTML = `<span class="target-placeholder" style="font-size:14px;letter-spacing:2px;color:var(--muted)">✨ ${fc.discovered} discovered</span>`;
         const tag = isNew ? '✨ NEW! ' : '✅ ';
         showFeedback(playerFB, `${tag}${ITEMS[a].emoji} ${a} + ${ITEMS[b].emoji} ${b} → ${emoji} ${name}`, isNew ? 'success' : 'info');
-        // Check win: item name matches target (case-insensitive)
-        if (name.toLowerCase() === state.target.toLowerCase()) {
-          clearSelection();
-          combineBtn.disabled = false;
-          state.active = false;
-          showOverlay(winOverlay, 'win', { target: state.target, time: '∞' });
-          return;
-        }
       } else {
         showFeedback(playerFB, `⚠️ Already have ${emoji} ${name}`, 'warn');
       }
@@ -130,6 +126,7 @@ function updateSlots() {
 // ── PvP Mode ──────────────────────────────────────────────────────────────────
 function startPvP() {
   clearInterval(pve.timer);
+  clearInterval(fc.timer);
   document.body.classList.remove('pve-mode', 'free-mode');
 
   const diff   = $('diff-select').value;
@@ -177,6 +174,7 @@ function endPvP(winner) {
 function startPvE() {
   bot.stop();
   clearInterval(pvp.timer);
+  clearInterval(fc.timer);
   document.body.classList.remove('free-mode');
 
   state.mode = 'pve';
@@ -260,23 +258,38 @@ function startFreeCraft() {
 }
 
 function enterFreeCraftMode() {
-  // Pick a random target — same pool as PvP/PvE
-  const target = TARGETS[Math.floor(Math.random() * TARGETS.length)].name;
-
   state.mode      = 'free';
   state.active    = true;
-  state.target    = target;
+  state.target    = null;
   state.inventory = [...BASE_ITEMS];
   state.selected  = [];
+  fc.discovered   = 0;
+  fc.timeLeft     = 120;
 
   document.body.classList.remove('pve-mode');
   document.body.classList.add('free-mode');
-  stageLabel.textContent = '🌍 Free Craft — no time limit';
-  timerEl.textContent = '';
-  updateTargetDisplay(targetCard, target);
+  stageLabel.textContent = '🌍 Free Craft — discover as many as you can!';
+  // Show placeholder in target card
+  targetCard.innerHTML = `<span class="target-placeholder" style="font-size:14px;letter-spacing:2px;color:var(--muted)">✨ 0 discovered</span>`;
   hideOverlay(winOverlay);
   updateSlots();
   renderPlayer();
+
+  clearInterval(fc.timer);
+  updateTimerDisplay(timerEl, fc.timeLeft, true);
+  fc.timer = setInterval(() => {
+    fc.timeLeft--;
+    updateTimerDisplay(timerEl, fc.timeLeft, true);
+    if (fc.timeLeft <= 0) {
+      clearInterval(fc.timer);
+      endFreeCraft();
+    }
+  }, 1000);
+}
+
+function endFreeCraft() {
+  state.active = false;
+  showOverlay(winOverlay, 'fc-timeout', { discovered: fc.discovered });
 }
 
 // ── API Key Modal ─────────────────────────────────────────────────────────────

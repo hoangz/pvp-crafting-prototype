@@ -94,6 +94,7 @@ function showOverlay(overlay, result, data = {}) {
     'stage-clear':  { cls: 'stage', title: `✅ Stage ${data.stage} Clear!`, stats: `⏱ ${data.timeLeft}s left${scoreTag}`,             msg: `Ready for the next stage?` },
     'pve-complete': { cls: 'win',   title: '🎉 ALL CLEAR!',            stats: `${data.totalStages} stages · 🏅 ${data.totalScore} pts`, msg: `You conquered all stages!` },
     'timeout':      { cls: 'lose',  title: '⏰ TIME\'S UP!',           stats: `Target: ${data.target}`,                               msg: `Couldn't craft it in time. Try again!` },
+    'fc-timeout':   { cls: 'win',   title: '⏰ Time\'s Up!',           stats: `✨ ${data.discovered} new items discovered`,            msg: `Not bad! Try again to discover more.` },
   };
 
   const cfg = configs[result] || configs['win'];
