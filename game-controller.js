@@ -15,7 +15,7 @@ const state = {
 
 const pvp = { seconds: 0, timer: null };
 const pve = { stageIndex: 0, timeLeft: 0, timer: null, totalScore: 0, awaitingNext: false };
-const fc  = { timeLeft: 0, timer: null, discovered: 0 };
+const fc  = { timeLeft: 0, timer: null, stageIndex: 0, stages: [], totalScore: 0, awaitingNext: false };
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
@@ -71,18 +71,11 @@ async function executeCombine() {
         state.inventory.push(name);
         const tag = isNew ? '✨ NEW! ' : '✅ ';
         showFeedback(playerFB, `${tag}${ITEMS[a].emoji} ${a} + ${ITEMS[b].emoji} ${b} → ${emoji} ${name}`, isNew ? 'success' : 'info');
-        // Win check: target reached — score based on time remaining
+        // Win check: target reached
         if (name.toLowerCase() === state.target.toLowerCase()) {
-          clearInterval(fc.timer);
           clearSelection();
           combineBtn.disabled = false;
-          state.active = false;
-          const score = Math.floor((fc.timeLeft / 120) * 1000) + 500; // 500 base + up to 1000 time bonus
-          showOverlay(winOverlay, 'win', {
-            target: state.target,
-            time:   timerEl.textContent,
-            score,
-          });
+          clearFCStage();
           return;
         }
       } else {
@@ -253,21 +246,21 @@ function timeoutPvE() {
   showOverlay(winOverlay, 'timeout', { target: state.target });
 }
 
-// ── Free Craft Mode ───────────────────────────────────────────────────────────
+// ── Free Craft Mode (AI PvE — multi-stage with AI-generated recipes) ─────────
 async function startFreeCraft() {
   bot.stop();
   clearInterval(pvp.timer);
   clearInterval(pve.timer);
   clearInterval(fc.timer);
 
-  // Show loading state while AI generates recipes
+  // Show loading
   state.mode   = 'free';
   state.active = false;
   document.body.classList.remove('pve-mode');
   document.body.classList.add('free-mode');
   hideOverlay(winOverlay);
   stageLabel.textContent = '🤖 Generating recipes…';
-  targetCard.innerHTML = '<span class="target-placeholder" style="font-size:14px">⏳ AI building 12 recipes…</span>';
+  targetCard.innerHTML = '<span class="target-placeholder" style="font-size:14px">⏳ AI building recipes…</span>';
   timerEl.textContent = '';
   state.inventory = [...BASE_ITEMS];
   state.selected  = [];
@@ -275,37 +268,81 @@ async function startFreeCraft() {
   renderPlayer();
 
   try {
-    // Generate full recipe tree via AI
     const tree = await FreeCraft.generateTree();
     FreeCraft.liveCache = {};
 
-    // Pick a random target from the generated T3 items
-    const target = tree.targets[Math.floor(Math.random() * tree.targets.length)];
-    if (!target) throw new Error('No targets generated');
+    if (tree.targets.length === 0) throw new Error('No targets generated');
 
-    state.target = target;
-    state.active = true;
-    fc.timeLeft  = 120;
+    // Build stages from targets (each T3 = 1 stage)
+    fc.stages = tree.targets.map((t, i) => ({
+      stage:     i + 1,
+      target:    t,
+      timeLimit: 90,
+      label:     `Stage ${i + 1} — ${t}`,
+      baseScore: (i + 1) * 300,
+    }));
+    fc.stageIndex = 0;
+    fc.totalScore = 0;
+    fc.awaitingNext = false;
 
-    stageLabel.textContent = '🤖 API Mode — AI-generated recipes';
-    updateTargetDisplay(targetCard, target);
-    renderPlayer();
-
-    // Start countdown
-    updateTimerDisplay(timerEl, fc.timeLeft, true);
-    fc.timer = setInterval(() => {
-      fc.timeLeft--;
-      updateTimerDisplay(timerEl, fc.timeLeft, true);
-      if (fc.timeLeft <= 0) {
-        clearInterval(fc.timer);
-        state.active = false;
-        showOverlay(winOverlay, 'timeout', { target: state.target });
-      }
-    }, 1000);
+    beginFCStage();
   } catch (err) {
     stageLabel.textContent = '❌ Failed to generate recipes';
     targetCard.innerHTML = `<span class="target-placeholder" style="font-size:12px;color:var(--red)">${err.message}</span>`;
     showFeedback(playerFB, `❌ ${err.message}`, 'error');
+  }
+}
+
+function beginFCStage() {
+  const stage = fc.stages[fc.stageIndex];
+  state.target    = stage.target;
+  state.active    = true;
+  state.inventory = [...BASE_ITEMS];
+  state.selected  = [];
+  fc.timeLeft     = stage.timeLimit;
+
+  stageLabel.textContent = stage.label;
+  updateTargetDisplay(targetCard, stage.target);
+  updateSlots();
+  renderPlayer();
+
+  clearInterval(fc.timer);
+  updateTimerDisplay(timerEl, fc.timeLeft, true);
+  fc.timer = setInterval(() => {
+    fc.timeLeft--;
+    updateTimerDisplay(timerEl, fc.timeLeft, true);
+    if (fc.timeLeft <= 0) {
+      clearInterval(fc.timer);
+      state.active = false;
+      showOverlay(winOverlay, 'timeout', { target: state.target });
+    }
+  }, 1000);
+}
+
+function clearFCStage() {
+  state.active = false;
+  clearInterval(fc.timer);
+  const stage  = fc.stages[fc.stageIndex];
+  const isLast = fc.stageIndex >= fc.stages.length - 1;
+
+  const timeBonus  = Math.floor((fc.timeLeft / stage.timeLimit) * stage.baseScore);
+  const stageScore = stage.baseScore + timeBonus;
+  fc.totalScore   += stageScore;
+
+  if (isLast) {
+    showOverlay(winOverlay, 'pve-complete', {
+      totalStages: fc.stages.length,
+      totalScore:  fc.totalScore,
+    });
+  } else {
+    fc.awaitingNext = true;
+    showOverlay(winOverlay, 'stage-clear', {
+      stage:      stage.stage,
+      target:     state.target,
+      timeLeft:   fc.timeLeft,
+      stageScore,
+      totalScore: fc.totalScore,
+    });
   }
 }
 
@@ -341,6 +378,11 @@ $('play-again-btn').addEventListener('click', () => {
     beginPvEStage();
   } else if (state.mode === 'pvp') {
     startPvP();
+  } else if (state.mode === 'free' && fc.awaitingNext) {
+    fc.awaitingNext = false;
+    hideOverlay(winOverlay);
+    fc.stageIndex++;
+    beginFCStage();
   } else if (state.mode === 'free') {
     startFreeCraft();
   } else {
