@@ -1,147 +1,177 @@
-// Game data: all items, recipes, and targets
-// All items trace back to 4 base materials: Human, Fire, Magic, Beast
+// Game data: items, recipes, targets, PvE stages, solutions
+// 5 thematic groups: Fantasy · Tech · Combat · Society · Science/Media
+// Each match provides 4 starting items; 1-2 are distractors
 
-const BASE_ITEMS = ['Human', 'Fire', 'Magic', 'Beast'];
+const BASE_ITEMS = ['Human', 'Fire', 'Magic', 'Beast']; // used only by Free Craft mode
 
-// Item definitions: emoji + tier
+// ── Item definitions ──────────────────────────────────────────────────────────
 const ITEMS = {
-  // --- Base (tier 0) ---
-  'Human':   { tier: 0, emoji: '👤' },
-  'Fire':    { tier: 0, emoji: '🔥' },
-  'Magic':   { tier: 0, emoji: '⚡' },
-  'Beast':   { tier: 0, emoji: '🐾' },
+  // Tier 0: raw starting materials
+  'Human':    { tier: 0, emoji: '👤' },
+  'Magic':    { tier: 0, emoji: '✨' },
+  'Fire':     { tier: 0, emoji: '🔥' },
+  'Beast':    { tier: 0, emoji: '🐾' },
+  'Machine':  { tier: 0, emoji: '⚙️' },
+  'Energy':   { tier: 0, emoji: '⚡' },
+  'Data':     { tier: 0, emoji: '💾' },
+  'Tool':     { tier: 0, emoji: '🔧' },
+  'Material': { tier: 0, emoji: '🪨' },
+  'Land':     { tier: 0, emoji: '🌍' },
+  'Weapon':   { tier: 0, emoji: '⚔️' },
+  'Training': { tier: 0, emoji: '🏋️' },
+  'Armor':    { tier: 0, emoji: '🛡️' },
+  'Engine':   { tier: 0, emoji: '🔩' },
+  'Metal':    { tier: 0, emoji: '⛏️' },
+  'Wheel':    { tier: 0, emoji: '🛞' },
+  'Food':     { tier: 0, emoji: '🍖' },
+  'Game':     { tier: 0, emoji: '🎮' },
+  'Camera':   { tier: 0, emoji: '📷' },
+  'Funny':    { tier: 0, emoji: '😂' },
+  'Space':    { tier: 0, emoji: '🌌' },
+  'Gravity':  { tier: 0, emoji: '🌀' },
+  'Water':    { tier: 0, emoji: '💧' },
+  'Cold':     { tier: 0, emoji: '❄️' },
+  'Air':      { tier: 0, emoji: '🌬️' },
+  'Network':  { tier: 0, emoji: '📡' },
+  'Darkness': { tier: 0, emoji: '🌑' },
+  'Atom':     { tier: 0, emoji: '⚛️' },
+  'Matter':   { tier: 0, emoji: '🔮' },
+  'Life':     { tier: 0, emoji: '🌱' },
+  'Internet': { tier: 0, emoji: '🌐' }, // also craftable; can appear as starting item
 
-  // --- Tier 1: two base materials ---
-  'Warrior':   { tier: 1, emoji: '⚔️' },
-  'Wizard':    { tier: 1, emoji: '🔮' },
-  'Hunter':    { tier: 1, emoji: '🏹' },
-  'Hellhound': { tier: 1, emoji: '🐕' },
-  'Ember':     { tier: 1, emoji: '✨' },
-  'Monster':   { tier: 1, emoji: '👾' },
-  'Soldier':   { tier: 1, emoji: '🪖' },
-  'Wildfire':  { tier: 1, emoji: '💥' },
+  // Tier 1: directly crafted from two raw materials
+  'Wizard':      { tier: 1, emoji: '🧙' },
+  'Robot':       { tier: 1, emoji: '🤖' },
+  'Worker':      { tier: 1, emoji: '👷' },
+  'Ice':         { tier: 1, emoji: '🧊' },
+  'Soldier':     { tier: 1, emoji: '🪖' },
+  'Vehicle':     { tier: 1, emoji: '🚗' },
+  'Cooked Food': { tier: 1, emoji: '🍳' },
+  'Gamer':       { tier: 1, emoji: '🕹️' },
+  'Monster':     { tier: 1, emoji: '👾' },
+  'Computer':    { tier: 1, emoji: '💻' },
+  'Family':      { tier: 1, emoji: '👨‍👩‍👦' },
+  'Planet':      { tier: 1, emoji: '🪐' },
+  'Meme':        { tier: 1, emoji: '😆' },
+  'Server':      { tier: 1, emoji: '🖥️' },
+  'Builder':     { tier: 1, emoji: '🏗️' },
+  'Vampire':     { tier: 1, emoji: '🧛' },
+  'Warrior':     { tier: 1, emoji: '🗡️' },
+  'Plasma':      { tier: 1, emoji: '☄️' },
+  'Building':    { tier: 1, emoji: '🏢' },
 
-  // --- Tier 2: base+tier1 or tier1+tier1 ---
-  'Paladin':     { tier: 2, emoji: '🛡️' },
-  'Berserker':   { tier: 2, emoji: '💢' },
-  'Fire Knight': { tier: 2, emoji: '🔥' },
-  'Pyromancer':  { tier: 2, emoji: '🌋' },
-  'Druid':       { tier: 2, emoji: '🌿' },
-  'Necromancer': { tier: 2, emoji: '💀' },
-  'Ranger':      { tier: 2, emoji: '🎯' },
-  'Dragon':      { tier: 2, emoji: '🐉' },
-  'Demon':       { tier: 2, emoji: '😈' },
-  'Vampire':     { tier: 2, emoji: '🧛' },
-  'Cerberus':    { tier: 2, emoji: '🐺' },
-  'Griffin':     { tier: 2, emoji: '🦅' },
+  // Tier 2: require an intermediate step
+  'Dragon':       { tier: 2, emoji: '🐉' },
+  'AI':           { tier: 2, emoji: '🧠' },
+  'Settlement':   { tier: 2, emoji: '🏘️' },
+  'Viral Meme':   { tier: 2, emoji: '📱' },
+  'Tank':         { tier: 2, emoji: '🚛' },
+  'Knight':       { tier: 2, emoji: '⚜️' },
+  'Civilization': { tier: 2, emoji: '🏛️' },
+  'Streamer':     { tier: 2, emoji: '📹' },
 
-  // --- Tier 3: targets ---
-  'Dragon Knight': { tier: 3, emoji: '⚜️' },
-  'Archmage':      { tier: 3, emoji: '🌟' },
-  'Dark Lord':     { tier: 3, emoji: '👑' },
-  'Lich':          { tier: 3, emoji: '☠️' },
-  'Beastmaster':   { tier: 3, emoji: '🦁' },
-  'Phoenix':       { tier: 3, emoji: '🔥' },
+  // Tier 3: require 2+ intermediate steps
+  'City': { tier: 3, emoji: '🏙️' },
 };
 
-// Recipes: [ingredientA, ingredientB, result]
-// Commutative: A+B = B+A (handled by engine)
+// ── Recipes: [ingredientA, ingredientB, result] ───────────────────────────────
+// Commutative: A+B = B+A (engine handles sorting)
+// First recipe per pair wins; alternates provide multiple valid paths
 const RECIPES = [
-  // ── Tier 1 primaries (8) ──────────────────────────────
-  ['Human',  'Fire',   'Warrior'],
-  ['Human',  'Magic',  'Wizard'],
-  ['Human',  'Beast',  'Hunter'],
-  ['Fire',   'Beast',  'Hellhound'],
-  ['Fire',   'Magic',  'Ember'],
-  ['Magic',  'Beast',  'Monster'],
-  ['Human',  'Human',  'Soldier'],
-  ['Fire',   'Fire',   'Wildfire'],
+  // Fantasy
+  ['Human',   'Magic',    'Wizard'],
+  ['Magic',   'Beast',    'Monster'],
+  ['Human',   'Darkness', 'Vampire'],
+  ['Monster', 'Fire',     'Dragon'],    // T2
 
-  // ── Tier 2 primaries (12) ────────────────────────────
-  ['Warrior',   'Magic',     'Paladin'],
-  ['Warrior',   'Beast',     'Berserker'],
-  ['Warrior',   'Hellhound', 'Fire Knight'],
-  ['Wizard',    'Fire',      'Pyromancer'],
-  ['Wizard',    'Beast',     'Druid'],
-  ['Wizard',    'Monster',   'Necromancer'],
-  ['Hunter',    'Ember',     'Ranger'],
-  ['Monster',   'Fire',      'Dragon'],
-  ['Monster',   'Magic',     'Demon'],
-  ['Monster',   'Human',     'Vampire'],
-  ['Hellhound', 'Magic',     'Cerberus'],
-  ['Ember',     'Beast',     'Griffin'],
+  // Tech
+  ['Machine', 'Energy',   'Robot'],
+  ['Machine', 'Data',     'Computer'],
+  ['Machine', 'Network',  'Server'],
+  ['Computer','Human',    'AI'],        // T2
+  ['Server',  'Data',     'Internet'],  // T2
 
-  // ── Tier 2 alternates (8) ────────────────────────────
-  ['Soldier',   'Magic',     'Paladin'],
-  ['Soldier',   'Beast',     'Berserker'],
-  ['Hunter',    'Hellhound', 'Ranger'],
-  ['Wildfire',  'Beast',     'Dragon'],
-  ['Hellhound', 'Wizard',    'Dragon'],
-  ['Hunter',    'Monster',   'Vampire'],
-  ['Druid',     'Fire',      'Pyromancer'],
-  ['Hellhound', 'Ember',     'Cerberus'],
+  // Combat & Vehicles
+  ['Human',   'Weapon',   'Soldier'],
+  ['Human',   'Training', 'Warrior'],
+  ['Warrior', 'Armor',    'Knight'],    // T2
+  ['Engine',  'Metal',    'Vehicle'],
+  ['Engine',  'Wheel',    'Vehicle'],   // alternate
+  ['Vehicle', 'Weapon',   'Tank'],      // T2
 
-  // ── Tier 3 primaries (6) ─────────────────────────────
-  ['Dragon',      'Warrior',    'Dragon Knight'],
-  ['Pyromancer',  'Magic',      'Archmage'],
-  ['Demon',       'Human',      'Dark Lord'],
-  ['Necromancer', 'Dragon',     'Lich'],
-  ['Druid',       'Hellhound',  'Beastmaster'],
-  ['Ember',       'Wildfire',   'Phoenix'],
+  // Society
+  ['Human',   'Tool',     'Worker'],
+  ['Human',   'Material', 'Builder'],
+  ['Human',   'Human',    'Family'],
+  ['Material','Land',     'Building'],
+  ['Worker',  'Land',     'Building'],  // alternate
+  ['Family',  'Land',     'Settlement'],   // T2
+  ['Settlement','Material','City'],        // T3
 
-  // ── Tier 3 alternates (14) ───────────────────────────
-  ['Dragon',    'Human',       'Dragon Knight'],
-  ['Paladin',   'Dragon',      'Dragon Knight'],
-  ['Dragon',    'Wizard',      'Archmage'],
-  ['Griffin',   'Wizard',      'Archmage'],
-  ['Pyromancer','Dragon',      'Archmage'],
-  ['Vampire',   'Magic',       'Dark Lord'],
-  ['Demon',     'Paladin',     'Dark Lord'],
-  ['Demon',     'Wizard',      'Lich'],
-  ['Vampire',   'Necromancer', 'Lich'],
-  ['Berserker', 'Monster',     'Beastmaster'],
-  ['Ranger',    'Dragon',      'Beastmaster'],
-  ['Cerberus',  'Ember',       'Phoenix'],
-  ['Griffin',   'Ember',       'Phoenix'],
-  ['Dragon',    'Fire',        'Phoenix'],
+  // Media & Internet
+  ['Human',   'Game',     'Gamer'],
+  ['Human',   'Funny',    'Meme'],
+  ['Human',   'Camera',   'Streamer'],  // direct alternate
+  ['Gamer',   'Internet', 'Streamer'],  // T2 primary
+  ['Meme',    'Internet', 'Viral Meme'],// T2
+
+  // Science
+  ['Space',   'Gravity',  'Planet'],
+  ['Planet',  'Life',     'Civilization'], // T2
+  ['Atom',    'Energy',   'Plasma'],
+
+  // Misc
+  ['Water',   'Cold',     'Ice'],
+  ['Human',   'Food',     'Cooked Food'],
 ];
 
-// 10 targets: 3 easy / 3 medium / 4 hard
+// ── PvP targets — each has a starting inventory (base) + difficulty ───────────
+// Same 4 base items can yield DIFFERENT targets depending on correct recipe path
 const TARGETS = [
-  { name: 'Warrior',       difficulty: 'easy' },
-  { name: 'Wizard',        difficulty: 'easy' },
-  { name: 'Monster',       difficulty: 'easy' },
-  { name: 'Dragon',        difficulty: 'medium' },
-  { name: 'Paladin',       difficulty: 'medium' },
-  { name: 'Necromancer',   difficulty: 'medium' },
-  { name: 'Dragon Knight', difficulty: 'hard' },
-  { name: 'Archmage',      difficulty: 'hard' },
-  { name: 'Dark Lord',     difficulty: 'hard' },
-  { name: 'Phoenix',       difficulty: 'hard' },
+  // Easy: 1-step craft
+  { name: 'Wizard',    difficulty: 'easy',   base: ['Human','Magic','Fire','Beast'] },
+  { name: 'Robot',     difficulty: 'easy',   base: ['Machine','Energy','Human','Data'] },
+  { name: 'Monster',   difficulty: 'easy',   base: ['Beast','Magic','Fire','Human'] },
+  { name: 'Meme',      difficulty: 'easy',   base: ['Human','Internet','Funny','Game'] },
+  { name: 'Ice',       difficulty: 'easy',   base: ['Water','Cold','Fire','Air'] },
+
+  // Medium: 2-step craft with 1 distractor
+  { name: 'Dragon',    difficulty: 'medium', base: ['Human','Magic','Beast','Fire'] },
+  { name: 'AI',        difficulty: 'medium', base: ['Machine','Data','Human','Energy'] },
+  { name: 'Knight',    difficulty: 'medium', base: ['Human','Weapon','Training','Armor'] },
+  { name: 'Internet',  difficulty: 'medium', base: ['Machine','Network','Data','Energy'] },
+  { name: 'Streamer',  difficulty: 'medium', base: ['Human','Game','Internet','Funny'] },
+  { name: 'Tank',      difficulty: 'medium', base: ['Engine','Metal','Weapon','Wheel'] },
+
+  // Hard: 2-3 steps, tricky distractors, same base as medium targets
+  { name: 'City',         difficulty: 'hard', base: ['Human','Human','Land','Material'] },
+  { name: 'Viral Meme',   difficulty: 'hard', base: ['Human','Internet','Funny','Game'] },
+  { name: 'Civilization', difficulty: 'hard', base: ['Space','Gravity','Planet','Life'] },
 ];
 
-// Shortest solution path for each target: [ingredientA, ingredientB, result][]
-// Shown in the end-game overlay so players learn the recipes
-const SOLUTIONS = {
-  'Warrior':       [['Human',  'Fire',      'Warrior']],
-  'Wizard':        [['Human',  'Magic',     'Wizard']],
-  'Monster':       [['Magic',  'Beast',     'Monster']],
-  'Dragon':        [['Magic',  'Beast',     'Monster'],   ['Monster',    'Fire',   'Dragon']],
-  'Paladin':       [['Human',  'Fire',      'Warrior'],   ['Warrior',    'Magic',  'Paladin']],
-  'Necromancer':   [['Human',  'Magic',     'Wizard'],    ['Magic',      'Beast',  'Monster'],  ['Wizard', 'Monster', 'Necromancer']],
-  'Dragon Knight': [['Magic',  'Beast',     'Monster'],   ['Monster',    'Fire',   'Dragon'],   ['Human',  'Fire',    'Warrior'],   ['Dragon', 'Warrior', 'Dragon Knight']],
-  'Archmage':      [['Human',  'Magic',     'Wizard'],    ['Wizard',     'Fire',   'Pyromancer'], ['Pyromancer', 'Magic', 'Archmage']],
-  'Dark Lord':     [['Magic',  'Beast',     'Monster'],   ['Monster',    'Magic',  'Demon'],     ['Demon',  'Human',  'Dark Lord']],
-  'Phoenix':       [['Fire',   'Magic',     'Ember'],     ['Fire',       'Fire',   'Wildfire'],  ['Ember',  'Wildfire', 'Phoenix']],
-};
-
-// PvE mode: 5 stages with increasing difficulty + time limits (seconds)
-// Inventory resets to BASE_ITEMS at each stage start
-// baseScore: points for completing the stage; time bonus = floor(timeLeft/timeLimit * baseScore)
+// ── PvE: 5 stages, one per tier group ────────────────────────────────────────
 const PVE_STAGES = [
-  { stage: 1, target: 'Warrior',       timeLimit: 60,  label: 'Stage 1 — Warrior',       baseScore: 100 },
-  { stage: 2, target: 'Dragon',        timeLimit: 75,  label: 'Stage 2 — Dragon',         baseScore: 200 },
-  { stage: 3, target: 'Paladin',       timeLimit: 60,  label: 'Stage 3 — Paladin',        baseScore: 300 },
-  { stage: 4, target: 'Necromancer',   timeLimit: 60,  label: 'Stage 4 — Necromancer',    baseScore: 400 },
-  { stage: 5, target: 'Dragon Knight', timeLimit: 90,  label: 'Stage 5 — Dragon Knight',  baseScore: 500 },
+  { stage: 1, target: 'Wizard',       base: ['Human','Magic','Fire','Beast'],       timeLimit: 60, label: 'Stage 1 — Wizard',       baseScore: 100 },
+  { stage: 2, target: 'Dragon',       base: ['Human','Magic','Beast','Fire'],       timeLimit: 75, label: 'Stage 2 — Dragon',        baseScore: 200 },
+  { stage: 3, target: 'Knight',       base: ['Human','Weapon','Training','Armor'],  timeLimit: 60, label: 'Stage 3 — Knight',        baseScore: 300 },
+  { stage: 4, target: 'AI',           base: ['Machine','Data','Human','Energy'],    timeLimit: 75, label: 'Stage 4 — AI',            baseScore: 400 },
+  { stage: 5, target: 'City',         base: ['Human','Human','Land','Material'],    timeLimit: 90, label: 'Stage 5 — City',          baseScore: 500 },
 ];
+
+// ── Shortest solution paths — shown in end-game overlay ──────────────────────
+const SOLUTIONS = {
+  'Wizard':       [['Human','Magic','Wizard']],
+  'Robot':        [['Machine','Energy','Robot']],
+  'Monster':      [['Magic','Beast','Monster']],
+  'Meme':         [['Human','Funny','Meme']],
+  'Ice':          [['Water','Cold','Ice']],
+  'Dragon':       [['Magic','Beast','Monster'],   ['Monster','Fire','Dragon']],
+  'AI':           [['Machine','Data','Computer'], ['Computer','Human','AI']],
+  'Knight':       [['Human','Training','Warrior'],['Warrior','Armor','Knight']],
+  'Internet':     [['Machine','Network','Server'],['Server','Data','Internet']],
+  'Streamer':     [['Human','Game','Gamer'],      ['Gamer','Internet','Streamer']],
+  'Tank':         [['Engine','Metal','Vehicle'],  ['Vehicle','Weapon','Tank']],
+  'City':         [['Human','Human','Family'],['Family','Land','Settlement'],['Settlement','Material','City']],
+  'Viral Meme':   [['Human','Funny','Meme'],      ['Meme','Internet','Viral Meme']],
+  'Civilization': [['Planet','Life','Civilization']],
+};

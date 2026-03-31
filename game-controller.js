@@ -132,12 +132,13 @@ function startPvP() {
   clearInterval(fc.timer);
   document.body.classList.remove('pve-mode', 'free-mode');
 
-  const diff   = $('diff-select').value;
-  const pool   = diff === 'random' ? TARGETS : TARGETS.filter(t => t.difficulty === diff);
-  state.target = pool[Math.floor(Math.random() * pool.length)].name;
+  const diff  = $('diff-select').value;
+  const pool  = diff === 'random' ? TARGETS : TARGETS.filter(t => t.difficulty === diff);
+  const match = pool[Math.floor(Math.random() * pool.length)];
+  state.target = match.name;
   state.mode   = 'pvp';
   state.active = true;
-  state.inventory = [...BASE_ITEMS];
+  state.inventory = [...match.base];
   state.selected  = [];
   pvp.seconds = 0;
 
@@ -153,13 +154,13 @@ function startPvP() {
     updateTimerDisplay(timerEl, pvp.seconds, false);
   }, 1000);
 
-  bot.reset();
+  bot.reset(match.base);
   bot.onCombine = combo => {
     renderBot();
     showFeedback(botFB, `${ITEMS[combo.result].emoji} ${combo.result}`, 'info');
   };
   bot.onWin = () => endPvP('bot');
-  bot.start(state.target, diff === 'random' ? 'medium' : diff);
+  bot.start(state.target, diff === 'random' ? 'medium' : diff, match.base);
   renderBot();
 }
 
@@ -193,7 +194,7 @@ function beginPvEStage() {
   const stage = pve.stages[pve.stageIndex];
   state.target    = stage.target;
   state.active    = true;
-  state.inventory = [...BASE_ITEMS];
+  state.inventory = [...stage.base];
   state.selected  = [];
   pve.timeLeft    = stage.timeLimit;
 

@@ -13,8 +13,9 @@ class BotAI {
     this.onWin = null;     // () => void
   }
 
-  start(target, difficulty) {
+  start(target, difficulty, base = BASE_ITEMS) {
     this.target = target;
+    this.inventory = [...base];
     // Base delay by difficulty — jitter added per move
     const delays = { easy: 4500, medium: 2800, hard: 1600 };
     this._delay = delays[difficulty] ?? 2800;
@@ -26,9 +27,9 @@ class BotAI {
     this._timer = null;
   }
 
-  reset() {
+  reset(base = BASE_ITEMS) {
     this.stop();
-    this.inventory = [...BASE_ITEMS];
+    this.inventory = [...base];
   }
 
   _scheduleMove() {
