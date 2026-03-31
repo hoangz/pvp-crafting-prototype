@@ -284,58 +284,50 @@ body.pve-mode .player-side  { max-width: 640px; margin: 0 auto; }
 
 /* ── Mobile responsive (≤ 640px) ── */
 @media (max-width: 640px) {
-  /* Header: compact, controls only */
+  /* Header: compact */
   .top-bar { padding: 7px 12px; }
   .controls-section { gap: 6px; }
   .btn-primary, .btn-secondary { padding: 7px 12px; font-size: 12px; }
   #diff-select { font-size: 12px; padding: 5px 8px; }
 
-  /* Target banner: target left, timer right */
-  .target-banner        { padding: 10px 14px; gap: 8px; }
-  .target-banner-label  { font-size: 10px; letter-spacing: 1px; }
-  .target-card          { padding: 7px 16px; gap: 8px; }
-  .target-emoji         { font-size: 28px; }
-  .target-name          { font-size: 20px; }
-  .timer                { font-size: 30px; }
-  .stage-label          { font-size: 10px; }
+  /* Target banner: shrink to prevent overflow */
+  .target-banner       { padding: 8px 12px; gap: 6px; }
+  .target-main         { gap: 8px; min-width: 0; }
+  .target-banner-label { font-size: 10px; letter-spacing: 1px; flex-shrink: 0; }
+  .target-card         { padding: 6px 12px; gap: 6px; flex-shrink: 1; min-width: 0; }
+  .target-emoji        { font-size: 24px; flex-shrink: 0; }
+  .target-name         { font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  /* Bigger item cards for touch — 4 per row on 375px */
-  .item-card  { width: 82px; padding: 10px 6px 8px; }
-  .item-emoji { font-size: 28px; }
-  .item-name  { font-size: 11px; max-width: 74px; }
-
-  /* Combine slots bigger for touch */
-  .combine-slot { font-size: 13px; padding: 10px 8px; min-height: 44px; }
-  .btn-combine  { padding: 10px 14px; font-size: 20px; }
-  .plus-sign    { font-size: 18px; }
-
-  /* Solution in overlay */
-  .solution-step    { font-size: 12px; }
-  .overlay-solution { max-width: 260px; }
-  .stage-label    { font-size: 10px; }
-  .timer          { font-size: 28px; }
-
-  /* Buttons more compact */
-  .btn-primary, .btn-secondary { padding: 7px 12px; font-size: 12px; }
-  #diff-select { font-size: 12px; padding: 5px 8px; }
+  /* Timer block: constrained, no overflow */
+  .timer-block  { flex-shrink: 0; min-width: 56px; align-items: flex-end; }
+  .timer        { font-size: 26px; }
+  .stage-label  { font-size: 9px; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   /* Stack PvP sides vertically */
-  .game-area      { flex-direction: column; }
-  .side-divider   { width: auto; height: 2px; flex-shrink: 0; }
-  .player-side    { flex: 3; }   /* player gets more space */
-  .bot-side       { flex: 2; }
+  .game-area    { flex-direction: column; }
+  .side-divider { width: auto; height: 2px; flex-shrink: 0; }
+  .player-side  { flex: 3; }
+  .bot-side     { flex: 2; }
 
-  /* Bigger item cards for touch */
-  .item-card      { width: 76px; }
-  .item-emoji     { font-size: 24px; }
-  .item-name      { font-size: 11px; }
+  /* side-header: stack title above combine zone on mobile */
+  .side-header  { flex-direction: column; align-items: stretch; gap: 6px; margin-bottom: 6px; }
+  .side-title   { align-self: flex-start; }
 
-  /* Combine zone: tighter */
-  .combine-slot   { min-width: 0; font-size: 12px; padding: 8px 6px; }
-  .side-header    { margin-bottom: 6px; }
+  /* Combine zone: full width, slots grow evenly */
+  .combine-zone  { width: 100%; gap: 4px; }
+  .combine-slot  { min-width: 0; font-size: 13px; padding: 10px 6px; min-height: 44px; }
+  .btn-combine   { padding: 10px 14px; font-size: 20px; }
+  .plus-sign     { font-size: 16px; }
 
-  /* Overlay: bigger item, smaller title to fit screen */
+  /* Item cards: 4 per row on 375px */
+  .item-card  { width: 80px; padding: 10px 6px 8px; }
+  .item-emoji { font-size: 26px; }
+  .item-name  { font-size: 11px; max-width: 72px; }
+
+  /* Overlay */
   .overlay-title        { font-size: 28px; }
   .overlay-item-display { font-size: 80px; }
   .overlay-message      { font-size: 14px; }
+  .solution-step        { font-size: 12px; }
+  .overlay-solution     { max-width: 260px; }
 }
