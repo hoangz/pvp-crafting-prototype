@@ -77,22 +77,23 @@ body {
 .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
 .btn-primary:hover, .btn-secondary:hover { opacity: 0.85; transform: translateY(-1px); }
 
-/* ── Target banner: target + timer side by side ── */
+/* ── Target banner: stacked — target on top, timer below, both centered ── */
 .target-banner {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px;
+  justify-content: center;
+  padding: 10px 20px 8px;
   background: linear-gradient(135deg, rgba(124,58,237,0.18), rgba(124,58,237,0.06));
   border-bottom: 2px solid rgba(124,58,237,0.5);
   flex-shrink: 0;
-  gap: 12px;
+  gap: 4px;
 }
 .target-main {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
-  flex: 1;
 }
 .target-banner-label {
   font-size: 11px;
@@ -116,9 +117,9 @@ body {
 .target-name        { font-size: 22px; font-weight: 800; letter-spacing: 0.5px; }
 .target-placeholder { color: var(--muted); font-size: 22px; letter-spacing: 10px; }
 
-/* Timer block (inside target banner) */
-.timer-block { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
-.stage-label { font-size: 11px; color: var(--muted); height: 15px; text-align: right; }
+/* Timer block: centered below target */
+.timer-block { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.stage-label { font-size: 11px; color: var(--muted); text-align: center; }
 
 /* ── Game area ── */
 .game-area {
@@ -290,18 +291,15 @@ body.pve-mode .player-side  { max-width: 640px; margin: 0 auto; }
   .btn-primary, .btn-secondary { padding: 7px 12px; font-size: 12px; }
   #diff-select { font-size: 12px; padding: 5px 8px; }
 
-  /* Target banner: shrink to prevent overflow */
-  .target-banner       { padding: 8px 12px; gap: 6px; }
-  .target-main         { gap: 8px; min-width: 0; }
-  .target-banner-label { font-size: 10px; letter-spacing: 1px; flex-shrink: 0; }
-  .target-card         { padding: 6px 12px; gap: 6px; flex-shrink: 1; min-width: 0; }
-  .target-emoji        { font-size: 24px; flex-shrink: 0; }
-  .target-name         { font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-  /* Timer block: constrained, no overflow */
-  .timer-block  { flex-shrink: 0; min-width: 56px; align-items: flex-end; }
-  .timer        { font-size: 26px; }
-  .stage-label  { font-size: 9px; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Target banner: compact on mobile, still centered */
+  .target-banner       { padding: 8px 12px; gap: 3px; }
+  .target-banner-label { font-size: 10px; letter-spacing: 1px; }
+  .target-card         { padding: 6px 14px; gap: 6px; max-width: 80vw; }
+  .target-emoji        { font-size: 24px; }
+  .target-name         { font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 55vw; }
+  .timer-block         { min-width: 0; }
+  .timer               { font-size: 24px; }
+  .stage-label         { font-size: 9px; }
 
   /* Stack PvP sides vertically */
   .game-area    { flex-direction: column; }
