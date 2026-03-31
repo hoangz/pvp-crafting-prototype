@@ -85,7 +85,7 @@ IMPORTANT: Every recipe's ingredients (a, b) must be items that exist either as 
       this.tree.items[r.result] = { tier: r.tier || 1, emoji: r.emoji };
 
       const key = r.a <= r.b ? `${r.a}|${r.b}` : `${r.b}|${r.a}`;
-      engine.recipes.set(key, r.result);
+      engine.recipeMap.set(key, r.result);
       this.tree.recipes.push(r);
     }
 
@@ -146,7 +146,7 @@ IMPORTANT: Every recipe's ingredients (a, b) must be items that exist either as 
     // Register into engine so future lookups are instant
     if (!ITEMS[result.name]) ITEMS[result.name] = { tier: 1, emoji: result.emoji };
     const key = itemA <= itemB ? `${itemA}|${itemB}` : `${itemB}|${itemA}`;
-    engine.recipes.set(key, result.name);
+    engine.recipeMap.set(key, result.name);
 
     return { ...result, isNew: true };
   },
