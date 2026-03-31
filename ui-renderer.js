@@ -91,7 +91,7 @@ function showOverlay(overlay, result, data = {}) {
   const configs = {
     'win':          { cls: 'win',   title: '🏆 YOU WIN!',              stats: `⏱ ${data.time}`,                                       msg: `You crafted ${data.target} first!` },
     'lose':         { cls: 'lose',  title: '🤖 BOT WINS',              stats: `⏱ ${data.time}`,                                       msg: `Bot crafted ${data.target} first. Try again!` },
-    'stage-clear':  { cls: 'stage', title: `✅ Stage ${data.stage} Clear!`, stats: `⏱ ${data.timeLeft}s left${scoreTag}`,             msg: `Next stage in 2.5s…` },
+    'stage-clear':  { cls: 'stage', title: `✅ Stage ${data.stage} Clear!`, stats: `⏱ ${data.timeLeft}s left${scoreTag}`,             msg: `Ready for the next stage?` },
     'pve-complete': { cls: 'win',   title: '🎉 ALL CLEAR!',            stats: `${data.totalStages} stages · 🏅 ${data.totalScore} pts`, msg: `You conquered all stages!` },
     'timeout':      { cls: 'lose',  title: '⏰ TIME\'S UP!',           stats: `Target: ${data.target}`,                               msg: `Couldn't craft it in time. Try again!` },
   };
@@ -105,8 +105,11 @@ function showOverlay(overlay, result, data = {}) {
   itemDispEl.textContent    = data.target ? emoji : '';
   itemDispEl.title          = data.target || '';
 
-  // Hide the play-again button between PvE stages (auto-advances)
-  if (btnEl) btnEl.style.display = result === 'stage-clear' ? 'none' : '';
+  // Update button label per result type
+  if (btnEl) {
+    btnEl.style.display = '';
+    btnEl.textContent = result === 'stage-clear' ? 'NEXT STAGE ▶' : 'PLAY AGAIN';
+  }
 
   // Show solution path — skip for stage-clear (already know) and pve-complete
   const solutionEl = overlay.querySelector('.overlay-solution');

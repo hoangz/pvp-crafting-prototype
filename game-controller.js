@@ -14,7 +14,7 @@ const state = {
 };
 
 const pvp = { seconds: 0, timer: null };
-const pve = { stageIndex: 0, timeLeft: 0, timer: null, totalScore: 0 };
+const pve = { stageIndex: 0, timeLeft: 0, timer: null, totalScore: 0, awaitingNext: false };
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
@@ -197,6 +197,7 @@ function clearPvEStage() {
       totalScore:  pve.totalScore,
     });
   } else {
+    pve.awaitingNext = true;
     showOverlay(winOverlay, 'stage-clear', {
       stage:      stage.stage,
       target:     state.target,
@@ -204,11 +205,6 @@ function clearPvEStage() {
       stageScore,
       totalScore: pve.totalScore,
     });
-    setTimeout(() => {
-      hideOverlay(winOverlay);
-      pve.stageIndex++;
-      beginPvEStage();
-    }, 2500);
   }
 }
 
@@ -239,4 +235,15 @@ setupDropZones();
 $('start-pvp-btn').addEventListener('click', startPvP);
 $('start-pve-btn').addEventListener('click', startPvE);
 combineBtn.addEventListener('click', () => { if (state.selected.length === 2) executeCombine(); });
-$('play-again-btn').addEventListener('click', () => state.mode === 'pvp' ? startPvP() : startPvE());
+$('play-again-btn').addEventListener('click', () => {
+  if (state.mode === 'pve' && pve.awaitingNext) {
+    pve.awaitingNext = false;
+    hideOverlay(winOverlay);
+    pve.stageIndex++;
+    beginPvEStage();
+  } else if (state.mode === 'pvp') {
+    startPvP();
+  } else {
+    startPvE();
+  }
+});
