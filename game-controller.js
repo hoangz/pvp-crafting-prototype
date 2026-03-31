@@ -365,11 +365,20 @@ function setupDropZones() {
   });
 }
 
+// ── Active mode button highlight ──────────────────────────────────────────────
+function setActiveBtn(activeId) {
+  ['start-pvp-btn','start-pve-btn','start-fc-btn'].forEach(id => {
+    const el = $(id);
+    el.classList.toggle('btn-primary',   id === activeId);
+    el.classList.toggle('btn-secondary', id !== activeId);
+  });
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 setupDropZones();
-$('start-pvp-btn').addEventListener('click', startPvP);
-$('start-pve-btn').addEventListener('click', startPvE);
-$('start-fc-btn').addEventListener('click', startFreeCraft);
+$('start-pvp-btn').addEventListener('click', () => { setActiveBtn('start-pvp-btn'); startPvP(); });
+$('start-pve-btn').addEventListener('click', () => { setActiveBtn('start-pve-btn'); startPvE(); });
+$('start-fc-btn').addEventListener('click',  () => { setActiveBtn('start-fc-btn');  startFreeCraft(); });
 combineBtn.addEventListener('click', () => { if (state.selected.length === 2) executeCombine(); });
 $('play-again-btn').addEventListener('click', () => {
   if (state.mode === 'pve' && pve.awaitingNext) {
