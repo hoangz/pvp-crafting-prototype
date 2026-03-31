@@ -62,23 +62,71 @@ IMPORTANT: Every recipe's ingredients (a, b) must be items that exist either as 
     const text = data.choices?.[0]?.message?.content || '';
     const tree = this._parseJSON(text);
 
-    // Register all generated items and recipes
-    this.tree = { items: {}, recipes: [], targets: tree.targets || [] };
+    // Validate & register recipes
+    this.tree = { items: {}, recipes: [], targets: [] };
+    const validNames = new Set(BASE_ITEMS);
 
+    // Pass 1: register all result names so we know what exists
+    for (const r of tree.recipes) validNames.add(r.result);
+
+    // Pass 2: fix typos in ingredients & register valid recipes
     for (const r of tree.recipes) {
-      // Register item
+      r.a = this._fuzzyMatch(r.a, validNames) || r.a;
+      r.b = this._fuzzyMatch(r.b, validNames) || r.b;
+      // Trim emoji to single character if multi-emoji
+      if ([...r.emoji].length > 2) r.emoji = [...r.emoji][0];
+
+      // Skip recipe if ingredients don't exist
+      if (!validNames.has(r.a) || !validNames.has(r.b)) continue;
+
       if (!ITEMS[r.result]) {
         ITEMS[r.result] = { tier: r.tier || 1, emoji: r.emoji };
       }
       this.tree.items[r.result] = { tier: r.tier || 1, emoji: r.emoji };
 
-      // Register recipe into engine's lookup
       const key = r.a <= r.b ? `${r.a}|${r.b}` : `${r.b}|${r.a}`;
       engine.recipes.set(key, r.result);
       this.tree.recipes.push(r);
     }
 
+    // Validate targets: only keep targets that exist in recipes
+    this.tree.targets = (tree.targets || []).filter(t => validNames.has(t));
+    if (this.tree.targets.length === 0) throw new Error('No valid targets generated');
+
     return this.tree;
+  },
+
+  // Fuzzy match: fix AI typos like "Treent" → "Treant"
+  _fuzzyMatch(name, validNames) {
+    if (validNames.has(name)) return name;
+    // Try case-insensitive match
+    for (const v of validNames) {
+      if (v.toLowerCase() === name.toLowerCase()) return v;
+    }
+    // Try Levenshtein distance ≤ 2 (simple typo fix)
+    for (const v of validNames) {
+      if (this._editDist(name.toLowerCase(), v.toLowerCase()) <= 2) return v;
+    }
+    return null;
+  },
+
+  _editDist(a, b) {
+    if (Math.abs(a.length - b.length) > 2) return 99;
+    const m = a.length, n = b.length;
+    const dp = Array.from({ length: m + 1 }, (_, i) => {
+      const row = new Array(n + 1);
+      row[0] = i;
+      return row;
+    });
+    for (let j = 0; j <= n; j++) dp[0][j] = j;
+    for (let i = 1; i <= m; i++)
+      for (let j = 1; j <= n; j++)
+        dp[i][j] = Math.min(
+          dp[i - 1][j] + 1,
+          dp[i][j - 1] + 1,
+          dp[i - 1][j - 1] + (a[i - 1] !== b[j - 1] ? 1 : 0)
+        );
+    return dp[m][n];
   },
 
   // ── Live combine during gameplay (fallback for combos not in tree) ──
