@@ -1,12 +1,12 @@
-// Game controller: orchestrates PvP and PvE modes
-// Depends on: data.js, game-engine.js, bot-ai.js, ui-renderer.js
+// Game controller: orchestrates PvP, PvE, and Free Craft modes
+// Depends on: data.js, game-engine.js, bot-ai.js, ui-renderer.js, free-craft.js
 
 const engine = new GameEngine();
 const bot    = new BotAI(engine);
 
 // ── Shared State ──────────────────────────────────────────────────────────────
 const state = {
-  mode:      'pvp',  // 'pvp' | 'pve'
+  mode:      'pvp',  // 'pvp' | 'pve' | 'free'
   active:    false,
   target:    null,
   inventory: [...BASE_ITEMS],
@@ -29,6 +29,7 @@ const winOverlay  = $('win-overlay');
 const slotA       = $('slot-a');
 const slotB       = $('slot-b');
 const combineBtn  = $('combine-btn');
+const apiModal    = $('api-modal');
 
 // ── Render helpers ────────────────────────────────────────────────────────────
 function renderPlayer() {
@@ -47,18 +48,44 @@ function handleItemClick(name) {
     renderPlayer();
     if (state.selected.length === 2) setTimeout(executeCombine, 180);
   } else {
-    // Reset and start new selection
     state.selected = [name];
     updateSlots();
     renderPlayer();
   }
 }
 
-function executeCombine() {
+async function executeCombine() {
   if (state.selected.length !== 2) return;
   const [a, b] = state.selected;
-  const result  = engine.combine(a, b);
 
+  // ── Free Craft: AI-powered path ──
+  if (state.mode === 'free') {
+    combineBtn.disabled = true;
+    slotA.classList.add('loading');
+    slotB.classList.add('loading');
+    try {
+      const { name, emoji, isNew } = await FreeCraft.combine(a, b);
+      // Register new item into ITEMS so it renders correctly
+      if (!ITEMS[name]) ITEMS[name] = { tier: 1, emoji };
+      if (!state.inventory.includes(name)) {
+        state.inventory.push(name);
+        const tag = isNew ? '✨ NEW! ' : '✅ ';
+        showFeedback(playerFB, `${tag}${ITEMS[a].emoji} ${a} + ${ITEMS[b].emoji} ${b} → ${emoji} ${name}`, isNew ? 'success' : 'info');
+      } else {
+        showFeedback(playerFB, `⚠️ Already have ${emoji} ${name}`, 'warn');
+      }
+    } catch (err) {
+      showFeedback(playerFB, `❌ ${err.message}`, 'error');
+    }
+    slotA.classList.remove('loading');
+    slotB.classList.remove('loading');
+    clearSelection();
+    combineBtn.disabled = false;
+    return;
+  }
+
+  // ── PvP / PvE: static recipes ──
+  const result = engine.combine(a, b);
   if (result && !state.inventory.includes(result)) {
     state.inventory.push(result);
     showFeedback(playerFB, `✅ ${ITEMS[a].emoji}${a} + ${ITEMS[b].emoji}${b} → ${ITEMS[result].emoji} ${result}!`, 'success');
@@ -94,8 +121,8 @@ function updateSlots() {
 
 // ── PvP Mode ──────────────────────────────────────────────────────────────────
 function startPvP() {
-  // Stop any running PvE session before switching modes
   clearInterval(pve.timer);
+  document.body.classList.remove('pve-mode', 'free-mode');
 
   const diff   = $('diff-select').value;
   const pool   = diff === 'random' ? TARGETS : TARGETS.filter(t => t.difficulty === diff);
@@ -106,7 +133,6 @@ function startPvP() {
   state.selected  = [];
   pvp.seconds = 0;
 
-  document.body.classList.remove('pve-mode');
   stageLabel.textContent = '';
   updateTargetDisplay(targetCard, state.target);
   updateSlots();
@@ -141,15 +167,14 @@ function endPvP(winner) {
 
 // ── PvE Mode ──────────────────────────────────────────────────────────────────
 function startPvE() {
-  // Stop any running PvP session before switching modes
   bot.stop();
   clearInterval(pvp.timer);
+  document.body.classList.remove('free-mode');
 
   state.mode = 'pve';
   pve.stageIndex = 0;
   pve.totalScore = 0;
-  // Shuffle stage order so each run feels different
-  pve.stages = [...PVE_STAGES].sort(() => Math.random() - 0.5);
+  pve.stages = [...PVE_STAGES]; // sequential, no shuffle
   document.body.classList.add('pve-mode');
   hideOverlay(winOverlay);
   beginPvEStage();
@@ -186,7 +211,6 @@ function clearPvEStage() {
   const stage   = pve.stages[pve.stageIndex];
   const isLast  = pve.stageIndex >= pve.stages.length - 1;
 
-  // Score = base + time bonus (proportional to time remaining)
   const timeBonus   = Math.floor((pve.timeLeft / stage.timeLimit) * stage.baseScore);
   const stageScore  = stage.baseScore + timeBonus;
   pve.totalScore   += stageScore;
@@ -213,6 +237,78 @@ function timeoutPvE() {
   showOverlay(winOverlay, 'timeout', { target: state.target });
 }
 
+// ── Free Craft Mode ───────────────────────────────────────────────────────────
+function startFreeCraft() {
+  bot.stop();
+  clearInterval(pvp.timer);
+  clearInterval(pve.timer);
+
+  // Prompt for API key if not saved
+  if (!FreeCraft.apiKey) {
+    showApiKeyModal(() => enterFreeCraftMode());
+    return;
+  }
+  enterFreeCraftMode();
+}
+
+function enterFreeCraftMode() {
+  state.mode   = 'free';
+  state.active = true;
+  state.target = null;
+  state.inventory = [...BASE_ITEMS];
+  state.selected  = [];
+
+  document.body.classList.remove('pve-mode');
+  document.body.classList.add('free-mode');
+  stageLabel.textContent = '🌍 Free Craft';
+  targetCard.innerHTML = '<span class="target-placeholder" style="font-size:28px;letter-spacing:4px">∞</span>';
+  timerEl.textContent = '';
+  hideOverlay(winOverlay);
+  updateSlots();
+  renderPlayer();
+}
+
+// ── API Key Modal ─────────────────────────────────────────────────────────────
+function showApiKeyModal(onSuccess) {
+  const input    = $('api-key-input');
+  const errorEl  = $('api-key-error');
+  const saveBtn  = $('api-key-save-btn');
+  const cancelBtn = $('api-key-cancel-btn');
+
+  // Pre-fill if key already saved
+  input.value = FreeCraft.apiKey;
+  errorEl.classList.add('hidden');
+  apiModal.classList.remove('hidden');
+
+  function handleSave() {
+    const key = input.value.trim();
+    if (!key.startsWith('sk-ant-')) {
+      errorEl.textContent = 'Key must start with sk-ant-';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+    FreeCraft.apiKey = key;
+    apiModal.classList.add('hidden');
+    cleanup();
+    onSuccess();
+  }
+
+  function handleCancel() {
+    apiModal.classList.add('hidden');
+    cleanup();
+  }
+
+  function cleanup() {
+    saveBtn.removeEventListener('click', handleSave);
+    cancelBtn.removeEventListener('click', handleCancel);
+  }
+
+  saveBtn.addEventListener('click', handleSave);
+  cancelBtn.addEventListener('click', handleCancel);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') handleSave(); }, { once: true });
+  input.focus();
+}
+
 // ── Drag & Drop combine slots ─────────────────────────────────────────────────
 function setupDropZones() {
   [slotA, slotB].forEach((slot, idx) => {
@@ -234,6 +330,7 @@ function setupDropZones() {
 setupDropZones();
 $('start-pvp-btn').addEventListener('click', startPvP);
 $('start-pve-btn').addEventListener('click', startPvE);
+$('start-fc-btn').addEventListener('click', startFreeCraft);
 combineBtn.addEventListener('click', () => { if (state.selected.length === 2) executeCombine(); });
 $('play-again-btn').addEventListener('click', () => {
   if (state.mode === 'pve' && pve.awaitingNext) {
@@ -243,6 +340,8 @@ $('play-again-btn').addEventListener('click', () => {
     beginPvEStage();
   } else if (state.mode === 'pvp') {
     startPvP();
+  } else if (state.mode === 'free') {
+    enterFreeCraftMode();
   } else {
     startPvE();
   }
