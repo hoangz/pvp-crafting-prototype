@@ -128,22 +128,28 @@ const RECIPES = [
 // ── PvP targets — each has a starting inventory (base) + difficulty ───────────
 // Same 4 base items can yield DIFFERENT targets depending on correct recipe path
 const TARGETS = [
-  // Easy: 1-step craft
+  // Easy: 1-step craft (10 targets)
   { name: 'Wizard',    difficulty: 'easy',   base: ['Human','Magic','Fire','Beast'] },
   { name: 'Robot',     difficulty: 'easy',   base: ['Machine','Energy','Human','Data'] },
   { name: 'Monster',   difficulty: 'easy',   base: ['Beast','Magic','Fire','Human'] },
   { name: 'Meme',      difficulty: 'easy',   base: ['Human','Internet','Funny','Game'] },
   { name: 'Ice',       difficulty: 'easy',   base: ['Water','Cold','Fire','Air'] },
+  { name: 'Gamer',     difficulty: 'easy',   base: ['Human','Game','Internet','Camera'] },
+  { name: 'Plasma',    difficulty: 'easy',   base: ['Atom','Energy','Matter','Space'] },
+  { name: 'Vampire',   difficulty: 'easy',   base: ['Human','Magic','Darkness','Fire'] },
+  { name: 'Vehicle',   difficulty: 'easy',   base: ['Engine','Metal','Wheel','Energy'] },
+  { name: 'Worker',    difficulty: 'easy',   base: ['Human','Tool','Land','Material'] },
 
-  // Medium: 2-step craft with 1 distractor
+  // Medium: 2-step craft with 1 distractor (7 targets)
   { name: 'Dragon',    difficulty: 'medium', base: ['Human','Magic','Beast','Fire'] },
   { name: 'AI',        difficulty: 'medium', base: ['Machine','Data','Human','Energy'] },
   { name: 'Knight',    difficulty: 'medium', base: ['Human','Weapon','Training','Armor'] },
   { name: 'Internet',  difficulty: 'medium', base: ['Machine','Network','Data','Energy'] },
   { name: 'Streamer',  difficulty: 'medium', base: ['Human','Game','Internet','Funny'] },
   { name: 'Tank',      difficulty: 'medium', base: ['Engine','Metal','Weapon','Wheel'] },
+  { name: 'Computer',  difficulty: 'medium', base: ['Machine','Data','Network','Energy'] },
 
-  // Hard: 2-3 steps, tricky distractors, same base as medium targets
+  // Hard: 2-3 steps, tricky distractors (3 targets)
   { name: 'City',         difficulty: 'hard', base: ['Human','Human','Land','Material'] },
   { name: 'Viral Meme',   difficulty: 'hard', base: ['Human','Internet','Funny','Game'] },
   { name: 'Civilization', difficulty: 'hard', base: ['Space','Gravity','Planet','Life'] },
@@ -174,4 +180,10 @@ const SOLUTIONS = {
   'City':         [['Human','Human','Family'],['Family','Land','Settlement'],['Settlement','Material','City']],
   'Viral Meme':   [['Human','Funny','Meme'],      ['Meme','Internet','Viral Meme']],
   'Civilization': [['Planet','Life','Civilization']],
+  'Gamer':        [['Human','Game','Gamer']],
+  'Plasma':       [['Atom','Energy','Plasma']],
+  'Vampire':      [['Human','Darkness','Vampire']],
+  'Vehicle':      [['Engine','Metal','Vehicle']],
+  'Worker':       [['Human','Tool','Worker']],
+  'Computer':     [['Machine','Data','Computer']],
 };
