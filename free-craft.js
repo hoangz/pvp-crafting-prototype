@@ -19,10 +19,20 @@ const FreeCraft = {
 
   // Parse JSON from possibly messy model output
   _parseJSON(raw) {
-    const clean = this._stripThink(raw);
+    const clean = this._stripThink(raw)
+      .replace(/<[^>]+>/g, '')   // strip any remaining XML-like tags
+      .trim();
     const match = clean.match(/\{[\s\S]*\}/s) || clean.match(/\[[\s\S]*\]/s);
     if (!match) throw new Error('No JSON found in response');
-    return JSON.parse(match[0]);
+    try {
+      return JSON.parse(match[0]);
+    } catch (e) {
+      // Try fixing common issues: trailing commas, unquoted keys
+      const fixed = match[0]
+        .replace(/,\s*([}\]])/g, '$1')          // trailing commas
+        .replace(/([{,]\s*)(\w+)\s*:/g, '$1"$2":'); // unquoted keys
+      return JSON.parse(fixed);
+    }
   },
 
   // ── Generate full recipe tree via parallel small API calls per tier ──
@@ -35,8 +45,8 @@ const FreeCraft = {
       ['Human','Fire'], ['Human','Magic'], ['Human','Beast'],
       ['Fire','Magic'], ['Fire','Beast'], ['Magic','Beast'],
     ];
-    const t1 = await Promise.all(t1Pairs.map(([a,b]) => this._callSingleCombo(a, b)));
-    t1Pairs.forEach(([a,b], i) => this._registerOne(a, b, t1[i], 1));
+    const t1 = await Promise.all(t1Pairs.map(([a,b]) => this._safeCombine(a, b)));
+    t1Pairs.forEach(([a,b], i) => { if (t1[i]) this._registerOne(a, b, t1[i], 1); });
     const t1Names = t1.map(r => r.name);
 
     // T2: pick 4 random base+T1 combos (parallel)
@@ -44,8 +54,8 @@ const FreeCraft = {
     for (const base of BASE_ITEMS)
       for (const t1n of t1Names) t2Candidates.push([base, t1n]);
     const t2Pairs = t2Candidates.sort(() => Math.random() - 0.5).slice(0, 4);
-    const t2 = await Promise.all(t2Pairs.map(([a,b]) => this._callSingleCombo(a, b)));
-    t2Pairs.forEach(([a,b], i) => this._registerOne(a, b, t2[i], 2));
+    const t2 = await Promise.all(t2Pairs.map(([a,b]) => this._safeCombine(a, b)));
+    t2Pairs.forEach(([a,b], i) => { if (t2[i]) this._registerOne(a, b, t2[i], 2); });
     const t2Names = t2.map(r => r.name);
 
     // T3: pick 2 random T1+T2 combos (parallel) — these become targets
@@ -53,12 +63,22 @@ const FreeCraft = {
     for (const t1n of t1Names)
       for (const t2n of t2Names) t3Candidates.push([t1n, t2n]);
     const t3Pairs = t3Candidates.sort(() => Math.random() - 0.5).slice(0, 2);
-    const t3 = await Promise.all(t3Pairs.map(([a,b]) => this._callSingleCombo(a, b)));
-    t3Pairs.forEach(([a,b], i) => this._registerOne(a, b, t3[i], 3));
-    this.tree.targets = t3.map(r => r.name);
+    const t3 = await Promise.all(t3Pairs.map(([a,b]) => this._safeCombine(a, b)));
+    t3Pairs.forEach(([a,b], i) => { if (t3[i]) this._registerOne(a, b, t3[i], 3); });
+    this.tree.targets = t3.filter(Boolean).map(r => r.name);
 
     if (this.tree.targets.length === 0) throw new Error('No targets generated');
     return this.tree;
+  },
+
+  // Wrap single combo call — returns null on failure instead of throwing
+  async _safeCombine(a, b) {
+    try {
+      return await this._callSingleCombo(a, b);
+    } catch (e) {
+      console.warn(`Failed combo ${a}+${b}: ${e.message}`);
+      return null;
+    }
   },
 
   // Register a single recipe into engine + tree
