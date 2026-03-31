@@ -186,7 +186,22 @@ function startPvE() {
   state.mode = 'pve';
   pve.stageIndex = 0;
   pve.totalScore = 0;
-  pve.stages = [...PVE_STAGES]; // sequential, no shuffle
+
+  // Build stages: pick from TARGETS filtered by difficulty, shuffle, take 5, sort easy→hard
+  const diff    = $('diff-select').value;
+  const pool    = diff === 'random' ? [...TARGETS] : TARGETS.filter(t => t.difficulty === diff);
+  const source  = pool.length >= 5 ? pool
+    : [...pool, ...TARGETS.filter(t => !pool.includes(t))]; // pad with others if < 5
+  const diffOrder = { easy: 0, medium: 1, hard: 2 };
+  const timeLimits = { easy: 60, medium: 75, hard: 90 };
+  const picked = source.sort(() => Math.random() - 0.5).slice(0, 5);
+  picked.sort((a, b) => diffOrder[a.difficulty] - diffOrder[b.difficulty]);
+  pve.stages = picked.map((t, i) => ({
+    stage: i + 1, target: t.name, base: t.base,
+    timeLimit: timeLimits[t.difficulty],
+    label: `Stage ${i + 1} — ${t.name}`,
+    baseScore: (i + 1) * 150,
+  }));
   document.body.classList.add('pve-mode');
   hideOverlay(winOverlay);
   beginPvEStage();
