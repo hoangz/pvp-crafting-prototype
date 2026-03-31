@@ -72,13 +72,18 @@ async function executeCombine() {
         state.inventory.push(name);
         const tag = isNew ? '✨ NEW! ' : '✅ ';
         showFeedback(playerFB, `${tag}${ITEMS[a].emoji} ${a} + ${ITEMS[b].emoji} ${b} → ${emoji} ${name}`, isNew ? 'success' : 'info');
-        // Win check: target reached
+        // Win check: target reached — score based on time remaining
         if (name.toLowerCase() === state.target.toLowerCase()) {
           clearInterval(fc.timer);
           clearSelection();
           combineBtn.disabled = false;
           state.active = false;
-          showOverlay(winOverlay, 'win', { target: state.target, time: timerEl.textContent });
+          const score = Math.floor((fc.timeLeft / 120) * 1000) + 500; // 500 base + up to 1000 time bonus
+          showOverlay(winOverlay, 'win', {
+            target: state.target,
+            time:   timerEl.textContent,
+            score,
+          });
           return;
         }
       } else {

@@ -89,7 +89,7 @@ function showOverlay(overlay, result, data = {}) {
     ? ` · +${data.stageScore}pts (total: ${data.totalScore})`
     : '';
   const configs = {
-    'win':          { cls: 'win',   title: '🏆 YOU WIN!',              stats: `⏱ ${data.time}`,                                       msg: `You crafted ${data.target} first!` },
+    'win':          { cls: 'win',   title: '🏆 YOU WIN!',              stats: data.score ? `⏱ ${data.time} · 🏅 ${data.score} pts` : `⏱ ${data.time}`, msg: `You crafted ${data.target} first!` },
     'lose':         { cls: 'lose',  title: '🤖 BOT WINS',              stats: `⏱ ${data.time}`,                                       msg: `Bot crafted ${data.target} first. Try again!` },
     'stage-clear':  { cls: 'stage', title: `✅ Stage ${data.stage} Clear!`, stats: `⏱ ${data.timeLeft}s left${scoreTag}`,             msg: `Ready for the next stage?` },
     'pve-complete': { cls: 'win',   title: '🎉 ALL CLEAR!',            stats: `${data.totalStages} stages · 🏅 ${data.totalScore} pts`, msg: `You conquered all stages!` },
