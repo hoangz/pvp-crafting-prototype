@@ -30,7 +30,6 @@ const winOverlay  = $('win-overlay');
 const slotA       = $('slot-a');
 const slotB       = $('slot-b');
 const combineBtn  = $('combine-btn');
-const apiModal    = $('api-modal');
 
 // ── Render helpers ────────────────────────────────────────────────────────────
 function renderPlayer() {
@@ -259,12 +258,6 @@ function startFreeCraft() {
   bot.stop();
   clearInterval(pvp.timer);
   clearInterval(pve.timer);
-
-  // Prompt for API key if not saved
-  if (!FreeCraft.apiKey) {
-    showApiKeyModal(() => enterFreeCraftMode());
-    return;
-  }
   enterFreeCraftMode();
 }
 
@@ -300,46 +293,6 @@ function enterFreeCraftMode() {
   }, 1000);
 }
 
-// ── API Key Modal ─────────────────────────────────────────────────────────────
-function showApiKeyModal(onSuccess) {
-  const input    = $('api-key-input');
-  const errorEl  = $('api-key-error');
-  const saveBtn  = $('api-key-save-btn');
-  const cancelBtn = $('api-key-cancel-btn');
-
-  // Pre-fill if key already saved
-  input.value = FreeCraft.apiKey;
-  errorEl.classList.add('hidden');
-  apiModal.classList.remove('hidden');
-
-  function handleSave() {
-    const key = input.value.trim();
-    if (!key.startsWith('sk-ant-')) {
-      errorEl.textContent = 'Key must start with sk-ant-';
-      errorEl.classList.remove('hidden');
-      return;
-    }
-    FreeCraft.apiKey = key;
-    apiModal.classList.add('hidden');
-    cleanup();
-    onSuccess();
-  }
-
-  function handleCancel() {
-    apiModal.classList.add('hidden');
-    cleanup();
-  }
-
-  function cleanup() {
-    saveBtn.removeEventListener('click', handleSave);
-    cancelBtn.removeEventListener('click', handleCancel);
-  }
-
-  saveBtn.addEventListener('click', handleSave);
-  cancelBtn.addEventListener('click', handleCancel);
-  input.addEventListener('keydown', e => { if (e.key === 'Enter') handleSave(); }, { once: true });
-  input.focus();
-}
 
 // ── Drag & Drop combine slots ─────────────────────────────────────────────────
 function setupDropZones() {

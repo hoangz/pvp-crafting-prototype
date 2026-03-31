@@ -1,9 +1,10 @@
-// Free Craft mode: AI-powered combining via Claude API
-// Caches results in localStorage so each combo is only called once
+// Free Craft mode: AI-powered combining via ZingPlay proxy (OpenAI-compatible)
+// No user API key required — uses shared proxy endpoint
 
 const FreeCraft = {
-  get apiKey() { return localStorage.getItem('fc_api_key') || ''; },
-  set apiKey(v) { localStorage.setItem('fc_api_key', v); },
+  _ENDPOINT: 'https://chat.zingplay.com/api/v1/chat/completions',
+  _KEY:      'sk-6508afc771c0423592cda880e50d6d7d',
+  _MODEL:    'gpt-4o-mini',
 
   // Cache: "ItemA|ItemB" → { name, emoji }
   get cache() { return JSON.parse(localStorage.getItem('fc_cache') || '{}'); },
@@ -11,7 +12,7 @@ const FreeCraft = {
 
   // Combine two items — returns { name, emoji, isNew }
   async combine(itemA, itemB) {
-    // Check existing static recipes first (instant)
+    // Check existing static recipes first (instant, no API call)
     const existing = engine.combine(itemA, itemB);
     if (existing) return { name: existing, emoji: ITEMS[existing]?.emoji || '✨', isNew: false };
 
@@ -20,7 +21,7 @@ const FreeCraft = {
     const cache = this.cache;
     if (cache[cacheKey]) return { ...cache[cacheKey], isNew: false };
 
-    // Call Claude API
+    // Call proxy API
     const result = await this._callAPI(itemA, itemB);
     cache[cacheKey] = result;
     this.saveCache(cache);
@@ -28,16 +29,14 @@ const FreeCraft = {
   },
 
   async _callAPI(itemA, itemB) {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch(this._ENDPOINT, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': this.apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${this._KEY}`,
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: this._MODEL,
         max_tokens: 60,
         messages: [{
           role: 'user',
@@ -47,12 +46,12 @@ const FreeCraft = {
     });
 
     const data = await resp.json();
-    if (data.error) throw new Error(data.error.message);
+    if (data.error) throw new Error(data.error.message || 'API error');
 
-    // Parse JSON from response text
-    const text = data.content[0].text.trim();
+    const text = data.choices?.[0]?.message?.content?.trim();
+    if (!text) throw new Error('Empty response from AI');
     const match = text.match(/\{.*\}/s);
-    if (!match) throw new Error('Invalid response from AI');
+    if (!match) throw new Error('Invalid response format');
     return JSON.parse(match[0]);
   },
 };
