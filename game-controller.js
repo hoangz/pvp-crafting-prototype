@@ -384,7 +384,7 @@ function setupDropZones() {
 
 // ── Active mode button highlight ──────────────────────────────────────────────
 function setActiveBtn(activeId) {
-  ['start-pvp-btn','start-pve-btn','start-fc-btn'].forEach(id => {
+  ['start-pvp-btn','start-pve-btn'].forEach(id => {
     const el = $(id);
     el.classList.toggle('btn-primary',   id === activeId);
     el.classList.toggle('btn-secondary', id !== activeId);
@@ -395,7 +395,11 @@ function setActiveBtn(activeId) {
 setupDropZones();
 $('start-pvp-btn').addEventListener('click', () => { setActiveBtn('start-pvp-btn'); startPvP(); });
 $('start-pve-btn').addEventListener('click', () => { setActiveBtn('start-pve-btn'); startPvE(); });
-$('start-fc-btn').addEventListener('click',  () => { setActiveBtn('start-fc-btn');  startFreeCraft(); });
+$('start-fc-btn').addEventListener('click',  () => { showFeedback(playerFB, '🚧 API mode coming soon!', 'info'); });
+
+// Default: start PvE on load
+setActiveBtn('start-pve-btn');
+startPvE();
 combineBtn.addEventListener('click', () => { if (state.selected.length === 2) executeCombine(); });
 $('play-again-btn').addEventListener('click', () => {
   if (state.mode === 'pve' && pve.awaitingNext) {
