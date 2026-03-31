@@ -70,11 +70,17 @@ async function executeCombine() {
       if (!ITEMS[name]) ITEMS[name] = { tier: 1, emoji };
       if (!state.inventory.includes(name)) {
         state.inventory.push(name);
-        if (isNew) fc.discovered++;
-        // Update discovery counter in target card
-        targetCard.innerHTML = `<span class="target-placeholder" style="font-size:14px;letter-spacing:2px;color:var(--muted)">✨ ${fc.discovered} discovered</span>`;
         const tag = isNew ? '✨ NEW! ' : '✅ ';
         showFeedback(playerFB, `${tag}${ITEMS[a].emoji} ${a} + ${ITEMS[b].emoji} ${b} → ${emoji} ${name}`, isNew ? 'success' : 'info');
+        // Win check: target reached
+        if (name.toLowerCase() === state.target.toLowerCase()) {
+          clearInterval(fc.timer);
+          clearSelection();
+          combineBtn.disabled = false;
+          state.active = false;
+          showOverlay(winOverlay, 'win', { target: state.target, time: timerEl.textContent });
+          return;
+        }
       } else {
         showFeedback(playerFB, `⚠️ Already have ${emoji} ${name}`, 'warn');
       }
@@ -258,19 +264,20 @@ function startFreeCraft() {
 }
 
 function enterFreeCraftMode() {
+  // Random target — changes every run
+  const target = TARGETS[Math.floor(Math.random() * TARGETS.length)].name;
+
   state.mode      = 'free';
   state.active    = true;
-  state.target    = null;
+  state.target    = target;
   state.inventory = [...BASE_ITEMS];
   state.selected  = [];
-  fc.discovered   = 0;
   fc.timeLeft     = 120;
 
   document.body.classList.remove('pve-mode');
   document.body.classList.add('free-mode');
-  stageLabel.textContent = '🌍 Free Craft — discover as many as you can!';
-  // Show placeholder in target card
-  targetCard.innerHTML = `<span class="target-placeholder" style="font-size:14px;letter-spacing:2px;color:var(--muted)">✨ 0 discovered</span>`;
+  stageLabel.textContent = '🤖 API Mode — AI generates all recipes';
+  updateTargetDisplay(targetCard, target);
   hideOverlay(winOverlay);
   updateSlots();
   renderPlayer();
@@ -282,14 +289,10 @@ function enterFreeCraftMode() {
     updateTimerDisplay(timerEl, fc.timeLeft, true);
     if (fc.timeLeft <= 0) {
       clearInterval(fc.timer);
-      endFreeCraft();
+      state.active = false;
+      showOverlay(winOverlay, 'timeout', { target: state.target });
     }
   }, 1000);
-}
-
-function endFreeCraft() {
-  state.active = false;
-  showOverlay(winOverlay, 'fc-timeout', { discovered: fc.discovered });
 }
 
 // ── API Key Modal ─────────────────────────────────────────────────────────────
@@ -365,7 +368,7 @@ $('play-again-btn').addEventListener('click', () => {
   } else if (state.mode === 'pvp') {
     startPvP();
   } else if (state.mode === 'free') {
-    enterFreeCraftMode();
+    startFreeCraft();
   } else {
     startPvE();
   }
