@@ -195,7 +195,12 @@ function startPvE() {
   const source  = pool.length >= 5 ? pool
     : [...pool, ...TARGETS.filter(t => !pool.includes(t))]; // pad with others if < 5
   const diffOrder = { easy: 0, medium: 1, hard: 2 };
-  const picked = source.sort(() => Math.random() - 0.5).slice(0, 5);
+  const STAGE_COUNT = 20;
+  // Cycle through shuffled source until we have enough stages
+  const expanded = [];
+  while (expanded.length < STAGE_COUNT)
+    expanded.push(...[...source].sort(() => Math.random() - 0.5));
+  const picked = expanded.slice(0, STAGE_COUNT);
   picked.sort((a, b) => diffOrder[a.difficulty] - diffOrder[b.difficulty]);
   pve.stages = picked.map((t, i) => ({
     stage: i + 1, target: t.name, base: t.base,
