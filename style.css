@@ -219,13 +219,13 @@ body.pve-mode .player-side  { max-width: 640px; margin: 0 auto; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding: 8px 5px 6px;
+  gap: 6px;
+  padding: 16px 10px 12px;
   background: var(--surface2);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
-  width: 70px;
+  width: 140px;
   transition: border-color 0.12s, transform 0.1s, background 0.12s;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
@@ -233,8 +233,8 @@ body.pve-mode .player-side  { max-width: 640px; margin: 0 auto; }
 .item-card:hover    { border-color: var(--accent); transform: translateY(-2px); }
 .item-card.selected { opacity: 0.35; pointer-events: none; }
 .item-card.dragging { opacity: 0.45; }
-.item-emoji { font-size: 22px; line-height: 1; }
-.item-name  { font-size: 10px; color: var(--muted); text-align: center; max-width: 62px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-emoji { font-size: 44px; line-height: 1; }
+.item-name  { font-size: 13px; color: var(--muted); text-align: center; max-width: 124px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ── API key modal ── */
 .modal {
@@ -365,10 +365,10 @@ body.free-mode .player-side  { max-width: 640px; margin: 0 auto; }
   .btn-combine   { padding: 10px 14px; font-size: 20px; }
   .plus-sign     { font-size: 16px; }
 
-  /* Item cards: 4 per row on 375px */
-  .item-card  { width: 80px; padding: 10px 6px 8px; }
-  .item-emoji { font-size: 26px; }
-  .item-name  { font-size: 11px; max-width: 72px; }
+  /* Item cards: 2 per row on mobile */
+  .item-card  { width: 140px; padding: 16px 10px 12px; }
+  .item-emoji { font-size: 44px; }
+  .item-name  { font-size: 13px; max-width: 124px; }
 
   /* Overlay */
   .overlay-title        { font-size: 28px; }
