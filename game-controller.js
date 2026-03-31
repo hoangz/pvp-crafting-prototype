@@ -140,6 +140,7 @@ function startPvP() {
   state.target = match.name;
   state.mode   = 'pvp';
   state.active = true;
+  updateScoreDisplay(0, false);
   state.inventory = [...match.base];
   state.selected  = [];
   pvp.seconds = 0;
@@ -186,6 +187,7 @@ function startPvE() {
   state.mode = 'pve';
   pve.stageIndex = 0;
   pve.totalScore = 0;
+  updateScoreDisplay(0, true);
 
   // Build stages: pick from TARGETS filtered by difficulty, shuffle, take 5, sort easy→hard
   const diff    = $('diff-select').value;
@@ -193,12 +195,11 @@ function startPvE() {
   const source  = pool.length >= 5 ? pool
     : [...pool, ...TARGETS.filter(t => !pool.includes(t))]; // pad with others if < 5
   const diffOrder = { easy: 0, medium: 1, hard: 2 };
-  const timeLimits = { easy: 60, medium: 75, hard: 90 };
   const picked = source.sort(() => Math.random() - 0.5).slice(0, 5);
   picked.sort((a, b) => diffOrder[a.difficulty] - diffOrder[b.difficulty]);
   pve.stages = picked.map((t, i) => ({
     stage: i + 1, target: t.name, base: t.base,
-    timeLimit: timeLimits[t.difficulty],
+    timeLimit: 35,
     label: `Stage ${i + 1} — ${t.name}`,
     baseScore: (i + 1) * 150,
   }));
@@ -241,10 +242,11 @@ function clearPvEStage() {
   const timeBonus   = Math.floor((pve.timeLeft / stage.timeLimit) * stage.baseScore);
   const stageScore  = stage.baseScore + timeBonus;
   pve.totalScore   += stageScore;
+  updateScoreDisplay(pve.totalScore, true);
 
   if (isLast) {
     showOverlay(winOverlay, 'pve-complete', {
-      totalStages: PVE_STAGES.length,
+      totalStages: pve.stages.length,
       totalScore:  pve.totalScore,
     });
   } else {
@@ -380,6 +382,14 @@ function setupDropZones() {
       if (state.selected[0] && state.selected[1]) setTimeout(executeCombine, 180);
     });
   });
+}
+
+// ── PvE score display ─────────────────────────────────────────────────────────
+function updateScoreDisplay(score, visible) {
+  const el = $('pve-score');
+  if (!el) return;
+  el.style.display = visible ? '' : 'none';
+  $('score-val').textContent = score;
 }
 
 // ── Active mode button highlight ──────────────────────────────────────────────
